@@ -1,0 +1,13 @@
+<%- include('_head') %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="panel">
+      <h2>Kody odzyskiwania</h2>
+      <p class="muted small">Zapisz je teraz w menedżerze haseł lub wydrukuj. Każdy kod działa jeden raz, gdy nie masz dostępu do telefonu. <strong>Nie zobaczysz ich ponownie.</strong></p>
+      <div class="codes mb-16"><% codes.forEach(function (c) { %><span><%= c %></span><% }) %></div>
+      <button class="btn btn-secondary btn-block" type="button" data-copy="<%= codes.join('\n') %>">Kopiuj wszystkie</button>
+      <a class="btn btn-primary btn-block mt-12" href="<%= A %>">Zapisałem kody — przejdź do panelu</a>
+    </div>
+  </div>
+</div>
+<%- include('_foot') %>

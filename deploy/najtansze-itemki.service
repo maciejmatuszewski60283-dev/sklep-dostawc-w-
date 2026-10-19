@@ -1,0 +1,23 @@
+# Alternatywa bez Dockera: usługa systemd.
+# Skopiuj do /etc/systemd/system/, dostosuj ścieżki i użytkownika, potem:
+#   sudo systemctl daemon-reload && sudo systemctl enable --now najtansze-itemki
+[Unit]
+Description=Sklep najtanszeitemki
+After=network-online.target
+
+[Service]
+Type=simple
+User=sklep
+WorkingDirectory=/opt/najtansze-itemki
+Environment=NODE_ENV=production
+ExecStart=/usr/bin/node src/server.js
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/najtansze-itemki/data /opt/najtansze-itemki/backups
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

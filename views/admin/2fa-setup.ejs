@@ -1,0 +1,18 @@
+<%- include('_head') %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo"><span class="logo-mark"><%- include('../partials/icon', { name: 'shield' }) %></span><span>Włącz 2FA</span></div>
+    <div class="panel">
+      <% if (error) { %><div class="flash flash-error mb-16"><%= error %></div><% } %>
+      <p class="muted small">Weryfikacja dwuetapowa jest obowiązkowa. Zeskanuj kod w aplikacji (np. Aegis, 2FAS, Google Authenticator, Authy), a następnie wpisz wyświetlony kod.</p>
+      <div class="qr-setup"><%- qr %></div>
+      <p class="small text-center">Albo wpisz ręcznie: <code class="mono"><%= secret.match(/.{1,4}/g).join(' ') %></code></p>
+      <form method="post" action="<%= A %>/2fa">
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <div class="field"><label class="label" for="c">Kod z aplikacji</label><input class="input mono" id="c" name="code" required autocomplete="one-time-code" inputmode="numeric" maxlength="6" autofocus></div>
+        <button class="btn btn-primary btn-block mt-16" type="submit">Potwierdź i włącz</button>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('_foot') %>

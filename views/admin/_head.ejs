@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title><%= title %> — Panel <%= shop.name %></title>
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/static/css/app.css?v=<%= v %>">
+<link rel="stylesheet" href="/static/css/admin.css?v=<%= v %>">
+<script src="/static/js/admin.js?v=<%= v %>" defer></script>
+</head>
+<body>
+<% if (typeof admin !== 'undefined' && admin) {
+  const nav = (href, label, icon, perm, count) => ({ href, label, icon, perm, count });
+  const items = [
+    ['Sklep', [nav('', 'Pulpit', 'box', 'dashboard'), nav('/zamowienia', 'Zamówienia', 'cart', 'orders', badges.awaitingStock), nav('/platnosci', 'Płatności', 'coin', 'payments.view', badges.unmatched), nav('/dostawy', 'Dostawy i e-maile', 'mail', 'deliveries', badges.failedEmails)]],
+    ['Katalog', [nav('/produkty', 'Produkty', 'tag', 'products'), nav('/magazyn', 'Magazyn kluczy', 'key', 'stock'), nav('/kategorie', 'Kategorie i platformy', 'filter', 'products'), nav('/rabaty', 'Kody rabatowe', 'tag', 'discounts')]],
+    ['Ustawienia', [nav('/strony', 'Strony i regulaminy', 'info', 'pages'), nav('/ustawienia/ogolne', 'Ogólne', 'info', 'settings'), nav('/ustawienia/platnosci', 'Płatności krypto', 'coin', 'settings'), nav('/ustawienia/email', 'E-mail', 'mail', 'settings'), nav('/uzytkownicy', 'Użytkownicy', 'lock', 'users'), nav('/logi', 'Dziennik zdarzeń', 'shield', 'logs')]],
+  ];
+  const cur = path.replace(A, '') || '';
+%>
+<div class="mobile-bar"><button class="btn btn-secondary btn-sm" type="button" data-menu>Menu</button><strong><%= title %></strong><span></span></div>
+<div class="admin">
+  <aside class="side">
+    <a class="logo" href="<%= A %>"><span class="logo-mark"><%- include('../partials/icon', { name: 'tag' }) %></span><span>Panel</span></a>
+    <% items.forEach(function ([group, links]) { const vis = links.filter(l => can(l.perm)); if (!vis.length) return; %>
+      <div class="side-label"><%= group %></div>
+      <% vis.forEach(function (l) { const active = l.href === '' ? cur === '' || cur === '/' : cur.startsWith(l.href); %>
+        <a class="nav <%= active ? 'active' : '' %>" href="<%= A + l.href %>"><%- include('../partials/icon', { name: l.icon }) %><%= l.label %><% if (l.count) { %><span class="count"><%= l.count %></span><% } %></a>
+      <% }) %>
+    <% }) %>
+    <div class="side-foot">
+      <a href="<%= A %>/konto"><%= admin.username %></a> · <%= roleNames[admin.role] %><br>
+      <a href="/" target="_blank" rel="noopener">Otwórz sklep ↗</a>
+      <form method="post" action="<%= A %>/logout"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"><button class="btn btn-ghost btn-sm" type="submit">Wyloguj</button></form>
+    </div>
+  </aside>
+  <div class="content">
+    <% if (flash) { %><div class="flash flash-<%= flash.type %> mb-16" role="status"><%= flash.message %></div><% } %>
+<% } %>

@@ -1,0 +1,45 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); const e = edit || {}; %>
+<div class="content-head"><h1>Kody rabatowe</h1></div>
+<div class="form-layout">
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Kod</th><th>Rabat</th><th>Min. koszyk</th><th>Użycia</th><th>Ważność</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% rows.forEach(function (d) { %>
+          <tr>
+            <td class="mono strong"><%= d.code %></td>
+            <td><%= d.type === 'percent' ? d.value + '%' : fmt(d.value) %></td>
+            <td><%= d.min_order_minor ? fmt(d.min_order_minor) : '—' %></td>
+            <td><%= d.used %><%= d.max_uses != null ? ' / ' + d.max_uses : '' %></td>
+            <td class="small muted"><%= d.starts_at ? d.starts_at.slice(0, 16) : '' %><%= d.expires_at ? ' → ' + d.expires_at.slice(0, 16) : (d.starts_at ? '' : 'bez limitu') %></td>
+            <td><span class="pill <%= d.active ? 'ok' : 'muted' %>"><%= d.active ? 'Aktywny' : 'Wyłączony' %></span></td>
+            <td class="actions">
+              <a class="btn btn-secondary btn-sm" href="?edytuj=<%= d.id %>">Edytuj</a>
+              <form method="post" action="<%= A %>/rabaty/<%= d.id %>/usun" data-confirm="Usunąć kod <%= d.code %>?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Usuń</button></form>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!rows.length) { %><tr><td colspan="7" class="muted">Brak kodów rabatowych.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+  <section class="panel">
+    <h2 class="section-title"><%= edit ? 'Edytuj kod' : 'Nowy kod' %></h2>
+    <form method="post" action="<%= A %>/rabaty">
+      <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="id" value="<%= e.id || '' %>">
+      <div class="field"><label class="label">Kod</label><input class="input mono" name="code" required maxlength="40" value="<%= e.code || '' %>" placeholder="np. START10"></div>
+      <div class="field"><label class="label">Typ</label><select class="select" name="type"><option value="percent" <%= e.type !== 'fixed' ? 'selected' : '' %>>Procentowy (%)</option><option value="fixed" <%= e.type === 'fixed' ? 'selected' : '' %>>Kwotowy (<%= shop.currency %>)</option></select></div>
+      <div class="field"><label class="label">Wartość</label><input class="input" name="value" required inputmode="decimal" value="<%= e.id ? (e.type === 'fixed' ? money.minorToInput(e.value) : e.value) : '' %>"></div>
+      <div class="field"><label class="label">Minimalna wartość koszyka</label><input class="input" name="min_order" inputmode="decimal" value="<%= e.min_order_minor ? money.minorToInput(e.min_order_minor) : '' %>"></div>
+      <div class="field"><label class="label">Limit użyć (puste = bez limitu)</label><input class="input" name="max_uses" inputmode="numeric" value="<%= e.max_uses != null ? e.max_uses : '' %>"></div>
+      <div class="field"><label class="label">Ważny od</label><input class="input" type="datetime-local" name="starts_at" value="<%= e.starts_at ? e.starts_at.slice(0, 16).replace(' ', 'T') : '' %>"></div>
+      <div class="field"><label class="label">Ważny do</label><input class="input" type="datetime-local" name="expires_at" value="<%= e.expires_at ? e.expires_at.slice(0, 16).replace(' ', 'T') : '' %>"></div>
+      <label class="check mt-12"><input type="checkbox" name="active" value="1" <%= !edit || e.active ? 'checked' : '' %>> Aktywny</label>
+      <p class="hint mt-8">Daty w czasie UTC.</p>
+      <button class="btn btn-primary btn-block mt-12" type="submit">Zapisz</button>
+      <% if (edit) { %><a class="btn btn-ghost btn-block mt-8" href="<%= A %>/rabaty">Anuluj edycję</a><% } %>
+    </form>
+  </section>
+</div>
+<%- include('_foot') %>

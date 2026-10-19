@@ -1,0 +1,110 @@
+<%- include('../partials/head') %>
+<div class="container page-head">
+  <nav class="breadcrumbs" aria-label="Okruszki">
+    <a href="/">Start</a><span>/</span><a href="/produkty">Katalog</a>
+    <% if (product.platform_name) { %><span>/</span><a href="/platforma/<%= product.platform_slug %>"><%= product.platform_name %></a><% } %>
+    <span>/</span><span><%= product.name %></span>
+  </nav>
+</div>
+<div class="container">
+  <div class="product">
+    <div class="reveal">
+      <div class="gallery-main" data-gallery-main>
+        <% if (product.images.length) { %>
+          <img src="/media/<%= product.images[0].file %>" alt="<%= product.name %>" width="<%= product.images[0].width %>" height="<%= product.images[0].height %>" fetchpriority="high">
+        <% } else { %>
+          <div class="ph" data-color="<%= product.platform_color || '#c6f432' %>"><span><%= (product.platform_name || product.name).slice(0, 2).toUpperCase() %></span></div>
+        <% } %>
+      </div>
+      <% if (product.images.length > 1) { %>
+        <div class="gallery-thumbs" role="list">
+          <% product.images.forEach(function (img, i) { %>
+            <button type="button" class="<%= i === 0 ? 'active' : '' %>" data-full="/media/<%= img.file %>" aria-label="Zdjęcie <%= i + 1 %>"><img src="/media/<%= img.thumb %>" alt="" loading="lazy"></button>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="buybox reveal">
+      <div class="meta-row">
+        <% if (product.platform_name) { %><span class="tag" data-color="<%= product.platform_color %>"><span class="dot"></span><%= product.platform_name %></span><% } %>
+        <% if (product.region) { %><span class="tag">Region: <%= product.region %></span><% } %>
+        <% if (product.category_name) { %><a class="tag" href="/kategoria/<%= product.category_slug %>"><%= product.category_name %></a><% } %>
+      </div>
+      <h1><%= product.name %></h1>
+      <% if (product.short_description) { %><p class="muted"><%= product.short_description %></p><% } %>
+
+      <form action="/koszyk/dodaj" method="post" data-add-to-cart>
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <% if (product.variants.length > 1) { %>
+          <span class="label">Wariant</span>
+          <div class="variants">
+            <% product.variants.forEach(function (v) { %>
+              <div class="variant">
+                <input type="radio" name="variant_id" id="v<%= v.id %>" value="<%= v.id %>" <%= v.id === selected.id ? 'checked' : '' %> <%= v.available ? '' : 'disabled' %>
+                  data-price="<%= fmt(v.price_minor) %>" data-compare="<%= v.compare_at_minor > v.price_minor ? fmt(v.compare_at_minor) : '' %>"
+                  data-lowest="<%= v.lowest30 != null ? fmt(v.lowest30) : '' %>" data-available="<%= v.available %>">
+                <label for="v<%= v.id %>">
+                  <span class="v-name"><%= v.name %></span>
+                  <span class="v-price"><%= fmt(v.price_minor) %></span>
+                  <span class="v-stock"><%= v.available ? (v.available > 50 ? 'Dostępny' : `Dostępne: ${v.available}`) : 'Brak' %></span>
+                </label>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <input type="hidden" name="variant_id" value="<%= selected.id %>">
+        <% } %>
+
+        <div class="price-block">
+          <span class="price-big" data-price><%= fmt(selected.price_minor) %></span>
+          <del data-compare <%= selected.compare_at_minor > selected.price_minor ? '' : 'hidden' %>><%= selected.compare_at_minor > selected.price_minor ? fmt(selected.compare_at_minor) : '' %></del>
+        </div>
+        <p class="omnibus" data-lowest-wrap <%= selected.lowest30 != null ? '' : 'hidden' %>>Najniższa cena z 30 dni przed obniżką: <span data-lowest><%= selected.lowest30 != null ? fmt(selected.lowest30) : '' %></span></p>
+
+        <div class="buy-row">
+          <div class="qty" data-qty>
+            <button type="button" data-step="-1" aria-label="Mniej">−</button>
+            <input type="number" name="qty" value="1" min="1" max="10" inputmode="numeric" aria-label="Ilość">
+            <button type="button" data-step="1" aria-label="Więcej">+</button>
+          </div>
+          <button class="btn btn-secondary btn-lg" type="submit" data-add <%= product.inStock ? '' : 'disabled' %>><%- include('../partials/icon', { name: 'cart' }) %>Do koszyka</button>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block mt-12" type="submit" name="buy_now" value="1" <%= product.inStock ? '' : 'disabled' %>>
+          <%= product.inStock ? 'Kup teraz' : 'Chwilowo niedostępny' %> <%- include('../partials/icon', { name: 'arrow' }) %>
+        </button>
+      </form>
+
+      <div class="perks">
+        <div class="perk"><%- include('../partials/icon', { name: 'bolt' }) %><span><strong>Dostawa automatyczna</strong> — <%= product.delivery_type === 'manual' ? 'realizacja przez obsługę po potwierdzeniu płatności' : 'od razu po potwierdzeniu płatności' %>.</span></div>
+        <div class="perk"><%- include('../partials/icon', { name: 'coin' }) %><span>Płatność w kryptowalutach<% if (acceptedAssets.length) { %>: <%= [...new Set(acceptedAssets.map(a => a.symbol))].join(', ') %><% } %>.</span></div>
+        <div class="perk"><%- include('../partials/icon', { name: 'shield' }) %><span>Odbiór przez bezpieczną stronę zamówienia — klucze nie trafiają do treści e-maila.</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" data-tabs>
+    <div class="tab-list" role="tablist">
+      <button role="tab" aria-selected="true" aria-controls="tab-desc" id="t-desc">Opis</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-req" id="t-req">Wymagania i ograniczenia</button>
+      <button role="tab" aria-selected="false" aria-controls="tab-del" id="t-del">Dostawa</button>
+    </div>
+    <div class="tab-panel prose" role="tabpanel" id="tab-desc" aria-labelledby="t-desc"><%- descriptionHtml || '<p>Brak opisu.</p>' %></div>
+    <div class="tab-panel prose" role="tabpanel" id="tab-req" aria-labelledby="t-req" hidden>
+      <% if (product.region) { %><p><strong>Region:</strong> <%= product.region %></p><% } %>
+      <%- requirementsHtml || '<p>Sprawdź platformę i region przed zakupem.</p>' %>
+    </div>
+    <div class="tab-panel prose" role="tabpanel" id="tab-del" aria-labelledby="t-del" hidden>
+      <%- deliveryHtml || '' %>
+      <p>Po potwierdzeniu płatności otrzymasz e-mail z linkiem do bezpiecznej strony zamówienia. Szczegóły: <a href="/strona/dostawa">Dostawa produktów cyfrowych</a>.</p>
+    </div>
+  </div>
+
+  <% if (related.length) { %>
+    <section class="section">
+      <div class="section-head"><h2>Może Cię zainteresować</h2></div>
+      <div class="grid"><% related.forEach(function (p) { %><%- include('../partials/card', { p }) %><% }) %></div>
+    </section>
+  <% } %>
+</div>
+<%- include('../partials/foot') %>

@@ -1,0 +1,6 @@
+<%- include('_layout-top') %>
+<h1 style="font-size:22px;margin:0 0 12px;color:#eef0f5">Link do zamówienia</h1>
+<p>Na Twoją prośbę wysyłamy nowy link do zamówienia <strong style="color:#c6f432"><%= order.public_id %></strong>. Poprzednie linki przestały działać.</p>
+<%- include('_button', { href: url, label: 'Otwórz zamówienie' }) %>
+<p style="font-size:13px;color:#9aa1b2">Jeśli to nie Ty prosiłeś(-aś) o link, zignoruj tę wiadomość.</p>
+<%- include('_layout-bottom') %>

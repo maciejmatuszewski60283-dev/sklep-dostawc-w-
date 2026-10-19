@@ -1,0 +1,20 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Strony i regulaminy</h1><a class="btn btn-primary" href="<%= A %>/strony/nowa">+ Nowa strona</a></div>
+<div class="help mb-16">Dokumenty prawne są szablonami. Uzupełnij wszystkie miejsca oznaczone <strong>[DO UZUPEŁNIENIA]</strong> i skonsultuj je z prawnikiem przed startem sprzedaży. Teksty strony głównej zmienisz w <a href="<%= A %>/ustawienia/ogolne">Ustawieniach ogólnych</a>.</div>
+<div class="table-wrap">
+  <table class="t">
+    <thead><tr><th>Tytuł</th><th>Adres</th><th>W stopce</th><th>Stan</th><th>Zmieniono</th><th></th></tr></thead>
+    <tbody>
+      <% rows.forEach(function (p) { %>
+        <tr>
+          <td class="strong"><%= p.title %></td><td class="mono small">/strona/<%= p.slug %></td>
+          <td><%= p.show_in_footer ? 'tak' : 'nie' %></td>
+          <td><% if (p.todo) { %><span class="pill warn">do uzupełnienia</span><% } else { %><span class="pill ok">gotowa</span><% } %></td>
+          <td class="muted small"><%= util.formatDate(p.updated_at) %></td>
+          <td class="actions"><a class="btn btn-ghost btn-sm" href="/strona/<%= p.slug %>" target="_blank" rel="noopener">Podgląd</a><a class="btn btn-secondary btn-sm" href="<%= A %>/strony/<%= p.slug %>">Edytuj</a></td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>
+<%- include('_foot') %>

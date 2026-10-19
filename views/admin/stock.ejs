@@ -1,0 +1,22 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Magazyn kluczy</h1></div>
+<p class="muted">Stany wszystkich wariantów. Dla produktów „Klucze” dodajesz kody, dla pozostałych stan ustawiasz w edycji produktu.</p>
+<div class="table-wrap">
+  <table class="t">
+    <thead><tr><th>Produkt</th><th>Wariant</th><th>Dostawa</th><th>Dostępne</th><th>Sprzedane</th><th></th></tr></thead>
+    <tbody>
+      <% rows.forEach(function (r) { %>
+        <tr>
+          <td><a class="strong" href="<%= A %>/produkty/<%= r.product_id %>"><%= r.product_name %></a></td>
+          <td><%= r.name %></td>
+          <td><%= { keys: 'Klucze', file: 'Plik', manual: 'Ręczna' }[r.delivery_type] %></td>
+          <td><% if (r.delivery_type === 'keys') { %><span class="pill <%= r.available === 0 ? 'bad' : r.available < 5 ? 'warn' : 'ok' %>"><%= r.available %></span><% } else { %><%= r.manual_stock == null ? 'bez limitu' : r.manual_stock %><% } %></td>
+          <td><%= r.delivery_type === 'keys' ? r.sold : '—' %></td>
+          <td class="actions"><% if (r.delivery_type === 'keys') { %><a class="btn btn-secondary btn-sm" href="<%= A %>/magazyn/<%= r.id %>">Zarządzaj</a><% } %></td>
+        </tr>
+      <% }) %>
+      <% if (!rows.length) { %><tr><td colspan="6" class="muted">Brak produktów.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('_foot') %>

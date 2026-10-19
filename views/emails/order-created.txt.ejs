@@ -1,0 +1,12 @@
+<% const p = order.payment; const A = ASSETS[p.asset]; %>Dziękujemy za zamówienie <%= order.public_id %>!
+
+<% order.items.forEach(function (it) { %><%= it.quantity %> x <%= it.product_name %> (<%= it.variant_name %>)
+<% }) %>Razem: <%= fmt(order.total_minor) %>
+Płatność: <%= money.atomicToDecimal(p.amount_atomic, p.decimals) %> <%= A.symbol %> (sieć: <%= A.network %>)
+Termin płatności: <%= util.formatDate(p.expires_at) %>
+
+Adres i kod QR: <%= url %>
+
+Potwierdzenie zgody: zażądałeś dostarczenia treści cyfrowej przed upływem terminu do odstąpienia od umowy i przyjąłeś do wiadomości utratę prawa odstąpienia z chwilą rozpoczęcia dostawy.
+
+<%= shop.name %><% if (shop.contactEmail) { %> — <%= shop.contactEmail %><% } %>

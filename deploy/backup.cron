@@ -1,0 +1,2 @@
+# Codzienna kopia zapasowa o 3:17 (crontab -e na serwerze). Kopie najlepiej synchronizuj też poza serwer (np. rclone do chmury).
+17 3 * * * cd /opt/najtansze-itemki && /usr/bin/node scripts/backup.js >> backups/backup.log 2>&1

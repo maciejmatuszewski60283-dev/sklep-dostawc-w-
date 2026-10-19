@@ -1,0 +1,28 @@
+<%
+const sale = p.compareAt && p.priceFrom != null && p.compareAt > p.priceFrom;
+const low = p.inStock && p.available <= 3;
+%>
+<article class="card">
+  <div class="card-media">
+    <% if (p.mainImage) { %>
+      <img src="/media/<%= p.mainImage.thumb %>" alt="<%= p.name %>" loading="lazy" decoding="async" width="640" height="480">
+    <% } else { %>
+      <div class="ph" data-color="<%= p.platform_color || '#c6f432' %>"><span><%= (p.platform_name || p.name).slice(0, 2).toUpperCase() %></span></div>
+    <% } %>
+    <div class="card-badges">
+      <% if (p.platform_name) { %><span class="badge" data-color="<%= p.platform_color %>"><span class="dot"></span><%= p.platform_name %></span><% } else { %><span></span><% } %>
+      <% if (sale) { %><span class="badge badge-sale">−<%= Math.round((1 - p.priceFrom / p.compareAt) * 100) %>%</span><% } else if (!p.inStock) { %><span class="badge badge-out">Brak</span><% } %>
+    </div>
+  </div>
+  <div class="card-body">
+    <h3 class="card-title"><a href="/produkt/<%= p.slug %>"><%= p.name %></a></h3>
+    <% if (p.short_description) { %><div class="card-sub"><%= p.short_description.length > 70 ? p.short_description.slice(0, 70) + '…' : p.short_description %></div><% } %>
+    <div class="card-foot">
+      <div>
+        <% if (sale) { %><span class="price-old"><%= fmt(p.compareAt) %></span><% } %>
+        <span class="price"><% if (p.variants.length > 1) { %><small>od</small><% } %><%= fmt(p.priceFrom) %></span>
+      </div>
+      <span class="stock-pill <%= !p.inStock ? 'out' : low ? 'low' : '' %>"><%= !p.inStock ? 'Niedostępny' : low ? 'Ostatnie sztuki' : 'Dostępny' %></span>
+    </div>
+  </div>
+</article>

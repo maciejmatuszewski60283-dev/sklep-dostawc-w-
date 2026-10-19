@@ -1,0 +1,57 @@
+<%- include('../partials/head') %>
+<div class="container page-head"><h1>Koszyk</h1></div>
+<div class="container">
+  <% if (!summary.items.length) { %>
+    <div class="empty section"><%- include('../partials/icon', { name: 'cart' }) %><h3>Twój koszyk jest pusty</h3><p>Znajdź coś dla siebie w katalogu.</p><a class="btn btn-primary" href="/produkty">Przejdź do katalogu</a></div>
+  <% } else { %>
+  <div class="two-col">
+    <div>
+      <% summary.problems.forEach(function (p) { %><div class="flash flash-warn mb-16"><%= p %></div><% }) %>
+      <div class="panel">
+        <% summary.items.forEach(function (it) { const v = it.variant; %>
+          <div class="cart-line">
+            <div class="cart-thumb"><% if (v.thumb) { %><img src="/media/<%= v.thumb %>" alt="" loading="lazy"><% } else { %><div class="ph"><span class="small"><%= v.product_name.slice(0, 2).toUpperCase() %></span></div><% } %></div>
+            <div>
+              <h4><a href="/produkt/<%= v.product_slug %>"><%= v.product_name %></a></h4>
+              <div class="muted small"><%= v.name %><% if (v.platform_name) { %> · <%= v.platform_name %><% } %> · <%= fmt(v.price_minor) %> / szt.</div>
+              <% if (!it.ok) { %><div class="error-text small">Dostępnych: <%= v.available %></div><% } %>
+              <div class="actions">
+                <form method="post" action="/koszyk/zmien" class="qty" data-qty data-autosubmit-qty>
+                  <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+                  <input type="hidden" name="variant_id" value="<%= v.id %>">
+                  <button type="button" data-step="-1" aria-label="Mniej">−</button>
+                  <input type="number" name="qty" value="<%= it.qty %>" min="1" max="10" aria-label="Ilość">
+                  <button type="button" data-step="1" aria-label="Więcej">+</button>
+                </form>
+                <form method="post" action="/koszyk/usun">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+                  <input type="hidden" name="variant_id" value="<%= v.id %>">
+                  <button class="btn btn-ghost btn-sm" type="submit">Usuń</button>
+                </form>
+              </div>
+            </div>
+            <div class="line-price"><%= fmt(it.lineTotal) %></div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+    <aside class="sticky">
+      <div class="panel">
+        <h3>Podsumowanie</h3>
+        <div class="summary-row"><span>Produkty (<%= summary.count %>)</span><span><%= fmt(summary.subtotal) %></span></div>
+        <% if (summary.discount.amount) { %><div class="summary-row text-ok"><span>Rabat (<%= summary.discount.code %>)</span><span>−<%= fmt(summary.discount.amount) %></span></div><% } %>
+        <% if (summary.discount.error) { %><div class="error-text small"><%= summary.discount.error %></div><% } %>
+        <div class="summary-row total"><span>Do zapłaty</span><b><%= fmt(summary.total) %></b></div>
+        <form class="discount-form" method="post" action="/koszyk/rabat">
+          <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+          <input class="input" name="code" placeholder="Kod rabatowy" maxlength="40" aria-label="Kod rabatowy" value="<%= summary.discount.code || '' %>">
+          <button class="btn btn-secondary btn-sm" type="submit">Użyj</button>
+        </form>
+        <a class="btn btn-primary btn-lg btn-block mt-16 <%= summary.valid ? '' : 'disabled' %>" href="/kasa">Przejdź do kasy <%- include('../partials/icon', { name: 'arrow' }) %></a>
+        <p class="muted small mt-12 mb-0">Płatność wyłącznie w kryptowalutach. Kwotę w krypto zobaczysz po wyborze waluty.</p>
+      </div>
+    </aside>
+  </div>
+  <% } %>
+</div>
+<%- include('../partials/foot') %>

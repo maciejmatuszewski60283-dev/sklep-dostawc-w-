@@ -1,0 +1,21 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><div><a class="muted small" href="<%= A %>/strony">← Strony</a><h1><%= page ? page.title : 'Nowa strona' %></h1></div></div>
+<div class="form-layout">
+  <form class="panel" method="post" action="<%= A %>/strony">
+    <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="original_slug" value="<%= page ? page.slug : '' %>">
+    <div class="form-grid">
+      <div class="field"><label class="label">Tytuł</label><input class="input" name="title" required maxlength="120" value="<%= page ? page.title : '' %>"></div>
+      <div class="field"><label class="label">Adres (/strona/…)</label><input class="input" name="slug" maxlength="80" value="<%= page ? page.slug : '' %>"></div>
+      <div class="field full"><label class="label">Treść</label><textarea class="textarea mono" name="body_md" rows="26" maxlength="100000"><%= page ? page.body_md : '' %></textarea>
+        <span class="hint">Formatowanie: <code>## Nagłówek</code>, <code>**pogrubienie**</code>, listy „- ” lub „1. ”, linki <code>[tekst](https://…)</code>, tabele.</span></div>
+      <div class="field"><label class="label">Kolejność</label><input class="input" name="sort" inputmode="numeric" value="<%= page ? page.sort : 10 %>"></div>
+      <label class="check"><input type="checkbox" name="show_in_footer" value="1" <%= !page || page.show_in_footer ? 'checked' : '' %>> Pokaż w stopce</label>
+    </div>
+    <div class="row mt-16"><button class="btn btn-primary" type="submit">Zapisz</button>
+    <% if (page && !['regulamin', 'polityka-prywatnosci'].includes(page.slug)) { %><button class="btn btn-danger" type="submit" form="page-del">Usuń stronę</button><% } %></div>
+  </form>
+  <% if (preview) { %><section class="panel"><h2 class="section-title">Podgląd</h2><div class="prose small"><%- preview %></div></section><% } %>
+</div>
+<% if (page) { %><form id="page-del" method="post" action="<%= A %>/strony/<%= page.slug %>/usun" data-confirm="Usunąć stronę?"><input type="hidden" name="_csrf" value="<%= csrf %>"></form><% } %>
+<%- include('_foot') %>

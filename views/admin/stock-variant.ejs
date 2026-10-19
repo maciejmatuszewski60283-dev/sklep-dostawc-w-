@@ -1,0 +1,38 @@
+<%- include('_head') %>
+<div class="content-head"><div><a class="muted small" href="<%= A %>/magazyn">← Magazyn</a><h1><%= v.product_name %> — <%= v.name %></h1></div></div>
+<% const avail = items.filter(i => i.status === 'available').length; %>
+<div class="grid-2">
+  <section class="panel">
+    <h2 class="section-title">Dodaj klucze</h2>
+    <p class="section-desc">Wklej klucze lub kody — <strong>jeden w linii</strong>. Duplikaty zostaną pominięte. Oczekujące opłacone zamówienia zostaną automatycznie zrealizowane.</p>
+    <form method="post" action="<%= A %>/magazyn/<%= v.id %>/dodaj">
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+      <textarea class="textarea mono" name="keys" rows="10" data-count-lines placeholder="XXXXX-XXXXX-XXXXX&#10;YYYYY-YYYYY-YYYYY" spellcheck="false" autocomplete="off"></textarea>
+      <div class="row mt-12"><span class="muted small">Linii: <strong data-lines-out>0</strong></span><span class="spacer"></span><button class="btn btn-primary" type="submit">Dodaj do magazynu</button></div>
+    </form>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">Stan</h2>
+    <div class="stats"><div class="stat"><div class="k">Dostępne</div><div class="v accent"><%= avail %></div></div><div class="stat"><div class="k">Sprzedane</div><div class="v"><%= items.length - avail %></div></div></div>
+    <div class="help">Ze względów bezpieczeństwa w panelu widać tylko fragment klucza. Pełną treść widzi wyłącznie klient na stronie zamówienia. Klucze są szyfrowane w bazie danych.</div>
+  </section>
+</div>
+<div class="table-wrap mt-16">
+  <table class="t">
+    <thead><tr><th>#</th><th>Klucz</th><th>Status</th><th>Zamówienie</th><th>Dodano</th><th></th></tr></thead>
+    <tbody>
+      <% items.forEach(function (s) { %>
+        <tr>
+          <td class="muted"><%= s.id %></td>
+          <td class="mono"><%= s.preview %></td>
+          <td><span class="pill <%= s.status === 'available' ? 'ok' : 'muted' %>"><%= s.status === 'available' ? 'Dostępny' : 'Sprzedany' %></span></td>
+          <td><%= s.public_id || '—' %></td>
+          <td class="muted"><%= util.formatDate(s.created_at) %></td>
+          <td class="actions"><% if (s.status === 'available') { %><form method="post" action="<%= A %>/magazyn/<%= v.id %>/usun/<%= s.id %>" data-confirm="Usunąć ten klucz z magazynu?"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"><button class="btn btn-ghost btn-sm" type="submit">Usuń</button></form><% } %></td>
+        </tr>
+      <% }) %>
+      <% if (!items.length) { %><tr><td colspan="6" class="muted">Magazyn jest pusty.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('_foot') %>

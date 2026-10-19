@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title><%= typeof title !== 'undefined' && title ? `${title} — ${shop.name}` : `${shop.name} — ${shop.tagline}` %></title>
+<meta name="description" content="<%= typeof metaDescription !== 'undefined' && metaDescription ? metaDescription : shop.tagline %>">
+<meta name="theme-color" content="#0a0b0f">
+<link rel="icon" href="/static/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/grotesk/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/inter/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/static/css/app.css?v=<%= v %>">
+<script src="/static/js/app.js?v=<%= v %>" defer></script>
+</head>
+<body>
+<a href="#main" class="visually-hidden">Przejdź do treści</a>
+<% if (shop.announcement) { %><div class="announce"><%= shop.announcement %></div><% } %>
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="/" class="logo" aria-label="<%= shop.name %> — strona główna">
+      <span class="logo-mark"><%- include('icon', { name: 'tag' }) %></span>
+      <span class="logo-text"><%= shop.name.split(' ')[0] %> <em><%= shop.name.split(' ').slice(1).join(' ') %></em></span>
+    </a>
+    <form class="header-search" action="/szukaj" method="get" role="search">
+      <%- include('icon', { name: 'search' }) %>
+      <input type="search" name="q" placeholder="Szukaj gier, kart, kodów…" value="<%= typeof filters !== 'undefined' && filters.q ? filters.q : '' %>" aria-label="Szukaj produktów" maxlength="100">
+    </form>
+    <nav class="header-nav" aria-label="Główna nawigacja">
+      <a class="nav-link" href="/produkty">Katalog</a>
+      <a class="nav-link" href="/strona/faq">Pomoc</a>
+      <a class="cart-btn" href="/koszyk" aria-label="Koszyk, produktów: <%= cartCount %>">
+        <%- include('icon', { name: 'cart' }) %><span class="label">Koszyk</span>
+        <span class="cart-count" data-cart-count><%= cartCount %></span>
+      </a>
+    </nav>
+  </div>
+  <% if (typeof navPlatforms !== 'undefined' && navPlatforms.length) { %>
+  <div class="subnav">
+    <div class="container subnav-inner">
+      <a class="chip <%= path === '/produkty' ? 'active' : '' %>" href="/produkty">Wszystko</a>
+      <% navPlatforms.forEach(function (p) { %>
+        <a class="chip <%= path === '/platforma/' + p.slug ? 'active' : '' %>" href="/platforma/<%= p.slug %>" data-color="<%= p.color %>"><span class="dot"></span><%= p.name %></a>
+      <% }) %>
+    </div>
+  </div>
+  <% } %>
+</header>
+<main id="main">
+<% if (flash) { %><div class="container"><div class="flash flash-<%= flash.type %>" role="status"><%= flash.message %></div></div><% } %>

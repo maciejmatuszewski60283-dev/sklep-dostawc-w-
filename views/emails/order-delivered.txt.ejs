@@ -1,0 +1,10 @@
+Zamówienie <%= order.public_id %> zostało opłacone i zrealizowane.
+
+<% order.items.forEach(function (it) { %><%= it.quantity %> x <%= it.product_name %> (<%= it.variant_name %>)
+<% }) %>
+Odbierz produkty: <%= url %>
+(kliknij link, a następnie "Odbierz produkty")
+
+Strona odbioru jest dostępna do <%= util.formatDate(order.delivery_access_until) %>. Nie przekazuj tego linku innym osobom.
+
+<%= shop.name %><% if (shop.contactEmail) { %> — <%= shop.contactEmail %><% } %>

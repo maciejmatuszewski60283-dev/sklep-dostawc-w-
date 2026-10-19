@@ -1,0 +1,53 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>E-mail i powiadomienia</h1></div>
+<div class="form-layout">
+  <form method="post" action="<%= A %>/ustawienia/email" class="stack" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <section class="panel">
+      <h2 class="section-title">Nadawca</h2>
+      <div class="form-grid">
+        <div class="field"><label class="label">Nazwa nadawcy</label><input class="input" name="email.from_name" maxlength="80" value="<%= s.get('email.from_name') %>"></div>
+        <div class="field"><label class="label">Adres nadawcy</label><input class="input" type="email" name="email.from_address" maxlength="200" value="<%= s.get('email.from_address') %>" placeholder="sklep@twojadomena.pl"></div>
+      </div>
+    </section>
+    <section class="panel">
+      <h2 class="section-title">Serwer SMTP</h2>
+      <div class="form-grid">
+        <div class="field"><label class="label">Host SMTP</label><input class="input" name="email.smtp_host" maxlength="200" value="<%= s.get('email.smtp_host') %>" placeholder="np. smtp.eu.mailgun.org"></div>
+        <div class="field"><label class="label">Port</label><input class="input" name="email.smtp_port" inputmode="numeric" value="<%= s.get('email.smtp_port') %>"><span class="hint">587 (STARTTLS) lub 465 (SSL)</span></div>
+        <div class="field"><label class="label">Użytkownik</label><input class="input" name="email.smtp_user" maxlength="200" value="<%= s.get('email.smtp_user') %>" autocomplete="off"></div>
+        <div class="field"><label class="label">Hasło <%= s.isSecretSet('email.smtp_pass') ? '(zapisane — wpisz, aby zmienić)' : '' %></label><input class="input" type="password" name="email.smtp_pass" maxlength="500" autocomplete="new-password" placeholder="<%= s.isSecretSet('email.smtp_pass') ? '••••••••' : '' %>"></div>
+        <label class="check"><input type="checkbox" name="email.smtp_secure" value="1" <%= s.getBool('email.smtp_secure') ? 'checked' : '' %>> SSL od początku połączenia (port 465)</label>
+      </div>
+    </section>
+    <section class="panel">
+      <h2 class="section-title">Powiadomienia dla Ciebie</h2>
+      <div class="field"><label class="label">E-mail do powiadomień (prywatny, niewidoczny dla klientów)</label><input class="input" type="email" name="notify.admin_email" maxlength="200" value="<%= s.get('notify.admin_email') %>"></div>
+      <label class="check mt-12"><input type="checkbox" name="notify.on_paid" value="1" <%= s.getBool('notify.on_paid') ? 'checked' : '' %>> Nowe opłacone zamówienie</label>
+      <label class="check mt-12"><input type="checkbox" name="notify.on_out_of_stock" value="1" <%= s.getBool('notify.on_out_of_stock') ? 'checked' : '' %>> Opłacone zamówienie czeka na towar</label>
+      <label class="check mt-12"><input type="checkbox" name="notify.on_delivery_failed" value="1" <%= s.getBool('notify.on_delivery_failed') ? 'checked' : '' %>> Nie udało się wysłać e-maila do klienta</label>
+    </section>
+    <div><button class="btn btn-primary" type="submit">Zapisz</button></div>
+  </form>
+  <div class="stack">
+    <section class="panel">
+      <h2 class="section-title">Wyślij test</h2>
+      <form method="post" action="<%= A %>/ustawienia/email/test">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field"><label class="label">Odbiorca</label><input class="input" type="email" name="to" required></div>
+        <button class="btn btn-secondary btn-block mt-12" type="submit">Wyślij wiadomość testową</button>
+      </form>
+    </section>
+    <div class="help">
+      <strong>Jak skonfigurować pocztę?</strong>
+      <ol>
+        <li>Załóż konto w usłudze wysyłki transakcyjnej (np. Brevo, Mailgun, Postmark, Amazon SES) albo użyj SMTP skrzynki w swojej domenie.</li>
+        <li>Po zakupie domeny dodaj w DNS rekordy SPF, DKIM i DMARC wskazane przez usługę — bez nich e-maile trafią do SPAMU.</li>
+        <li>Wpisz tu dane SMTP i wyślij test.</li>
+      </ol>
+      Hasło SMTP jest szyfrowane w bazie i nigdy nie jest wyświetlane.
+    </div>
+  </div>
+</div>
+<%- include('_foot') %>

@@ -1,0 +1,63 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Kategorie i platformy</h1></div>
+<div class="grid-2">
+  <section class="panel">
+    <h2 class="section-title">Kategorie</h2>
+    <p class="section-desc">Maksymalnie dwa poziomy (kategoria → podkategoria).</p>
+    <% categories.forEach(function (c) { %>
+      <details class="disclosure mb-8">
+        <summary><%= c.parent_id ? '— ' : '' %><%= c.name %> <span class="muted small">(<%= c.n %>)</span><% if (!c.active) { %> <span class="pill muted">ukryta</span><% } %></summary>
+        <div>
+          <form method="post" action="<%= A %>/kategorie" class="form-grid">
+            <input type="hidden" name="_csrf" value="<%= csrfToken() %>"><input type="hidden" name="id" value="<%= c.id %>">
+            <div class="field"><label class="label">Nazwa</label><input class="input" name="name" value="<%= c.name %>" required maxlength="80"></div>
+            <div class="field"><label class="label">Adres</label><input class="input" name="slug" value="<%= c.slug %>" maxlength="80"></div>
+            <div class="field"><label class="label">Nadrzędna</label><select class="select" name="parent_id"><option value="">— brak —</option><% categories.filter(x => !x.parent_id && x.id !== c.id).forEach(function (x) { %><option value="<%= x.id %>" <%= c.parent_id === x.id ? 'selected' : '' %>><%= x.name %></option><% }) %></select></div>
+            <div class="field"><label class="label">Kolejność</label><input class="input" name="sort" value="<%= c.sort %>" inputmode="numeric"></div>
+            <div class="field full"><label class="label">Opis</label><input class="input" name="description" value="<%= c.description %>" maxlength="300"></div>
+            <label class="check"><input type="checkbox" name="active" value="1" <%= c.active ? 'checked' : '' %>> Widoczna</label>
+            <div class="row"><button class="btn btn-primary btn-sm" type="submit">Zapisz</button><button class="btn btn-danger btn-sm" type="submit" form="cat-del-<%= c.id %>">Usuń</button></div>
+          </form>
+          <form id="cat-del-<%= c.id %>" method="post" action="<%= A %>/kategorie/<%= c.id %>/usun" data-confirm="Usunąć kategorię „<%= c.name %>”?"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"></form>
+        </div>
+      </details>
+    <% }) %>
+    <h3 class="section-title mt-24">Nowa kategoria</h3>
+    <form method="post" action="<%= A %>/kategorie" class="form-grid">
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+      <div class="field"><label class="label">Nazwa</label><input class="input" name="name" required maxlength="80"></div>
+      <div class="field"><label class="label">Nadrzędna</label><select class="select" name="parent_id"><option value="">— brak —</option><% categories.filter(x => !x.parent_id).forEach(function (x) { %><option value="<%= x.id %>"><%= x.name %></option><% }) %></select></div>
+      <div class="field full"><label class="label">Opis</label><input class="input" name="description" maxlength="300"></div>
+      <div><button class="btn btn-primary btn-sm" type="submit">+ Dodaj kategorię</button></div>
+    </form>
+  </section>
+  <section class="panel" id="platformy">
+    <h2 class="section-title">Platformy</h2>
+    <p class="section-desc">Np. Steam, PlayStation, Xbox. Kolor jest używany na kartach produktów.</p>
+    <% platforms.forEach(function (p) { %>
+      <details class="disclosure mb-8">
+        <summary><span class="tag" data-color="<%= p.color %>"><span class="dot"></span><%= p.name %></span> <span class="muted small">(<%= p.n %>)</span><% if (!p.active) { %> <span class="pill muted">ukryta</span><% } %></summary>
+        <div>
+          <form method="post" action="<%= A %>/platformy" class="form-grid">
+            <input type="hidden" name="_csrf" value="<%= csrfToken() %>"><input type="hidden" name="id" value="<%= p.id %>">
+            <div class="field"><label class="label">Nazwa</label><input class="input" name="name" value="<%= p.name %>" required maxlength="60"></div>
+            <div class="field"><label class="label">Kolor</label><input class="input" type="color" name="color" value="<%= p.color %>"></div>
+            <div class="field"><label class="label">Adres</label><input class="input" name="slug" value="<%= p.slug %>" maxlength="80"></div>
+            <div class="field"><label class="label">Kolejność</label><input class="input" name="sort" value="<%= p.sort %>" inputmode="numeric"></div>
+            <label class="check"><input type="checkbox" name="active" value="1" <%= p.active ? 'checked' : '' %>> Widoczna</label>
+            <div class="row"><button class="btn btn-primary btn-sm" type="submit">Zapisz</button><button class="btn btn-danger btn-sm" type="submit" form="pl-del-<%= p.id %>">Usuń</button></div>
+          </form>
+          <form id="pl-del-<%= p.id %>" method="post" action="<%= A %>/platformy/<%= p.id %>/usun" data-confirm="Usunąć platformę „<%= p.name %>”?"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"></form>
+        </div>
+      </details>
+    <% }) %>
+    <h3 class="section-title mt-24">Nowa platforma</h3>
+    <form method="post" action="<%= A %>/platformy" class="form-grid">
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+      <div class="field"><label class="label">Nazwa</label><input class="input" name="name" required maxlength="60"></div>
+      <div class="field"><label class="label">Kolor</label><input class="input" type="color" name="color" value="#c6f432"></div>
+      <div><button class="btn btn-primary btn-sm" type="submit">+ Dodaj platformę</button></div>
+    </form>
+  </section>
+</div>
+<%- include('_foot') %>

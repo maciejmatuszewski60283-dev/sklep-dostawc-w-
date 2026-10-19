@@ -1,0 +1,204 @@
+<%- include('../partials/head') %>
+<%
+const S = order.status;
+const P = pv ? pv.status : null;
+const labels = {
+  awaiting_payment: ['Oczekuje na płatność', 'status-wait'], underpaid: ['Niedopłacone', 'status-bad'], paid: ['Opłacone', 'status-info'],
+  awaiting_stock: ['Opłacone — w realizacji', 'status-info'], fulfilled: ['Zrealizowane', 'status-ok'], expired: ['Wygasłe', 'status-muted'],
+  cancelled: ['Anulowane', 'status-muted'], refunded: ['Zwrócone', 'status-muted'],
+};
+const [label, cls] = labels[S] || [S, 'status-muted'];
+const isPaid = ['paid', 'awaiting_stock', 'fulfilled'].includes(S);
+const detected = pv && (pv.txs.length > 0 || isPaid);
+const canPay = S === 'awaiting_payment' && pv && ['pending', 'underpaid'].includes(P) && !pv.expired;
+const watching = S === 'awaiting_payment' && pv && ['pending', 'underpaid', 'confirming'].includes(P);
+%>
+<div class="container page-head">
+  <div class="order-head">
+    <div>
+      <p class="muted small mb-8">Zamówienie</p>
+      <h1 class="mono mb-8"><%= order.public_id %></h1>
+      <p class="muted small mb-0">Złożone <%= util.formatDate(order.created_at) %> · <%= order.email %></p>
+    </div>
+    <span class="status <%= cls %>" data-order-status><%= label %></span>
+  </div>
+</div>
+
+<div class="container two-col"
+  <% if (watching || S === 'paid') { %>data-poll="/zamowienie/<%= order.public_id %>/status" data-state="<%= S %>|<%= P %>|<%= pv ? pv.txs.length : 0 %>|<%= pv ? pv.confirmations : 0 %>"<% } %>>
+  <div>
+    <% if (claimed) { %><div class="flash flash-info mb-16">Dziękujemy. Obsługa sprawdzi zgłoszoną transakcję i przypisze ją do zamówienia.</div><% } %>
+
+    <% if (canPay) { %>
+      <section class="panel reveal">
+        <h2 class="panel-title"><span class="num"><%- include('../partials/icon', { name: 'coin' }) %></span>Zapłać <%= pv.asset.symbol %> <span class="muted small">· <%= pv.asset.network %></span></h2>
+        <% if (pv.asset.testnet) { %><div class="flash flash-warn mb-16">To jest sieć TESTOWA — używaj wyłącznie testowych monet.</div><% } %>
+        <div class="pay">
+          <div>
+            <div class="qr" aria-label="Kod QR z adresem płatności"><%- qr %></div>
+            <p class="muted small text-center mt-8"><%= pv.asset.kind === 'utxo' ? 'Kod zawiera adres i kwotę' : 'Kod zawiera tylko adres — kwotę wpisz ręcznie' %></p>
+          </div>
+          <div>
+            <div class="pay-field">
+              <span class="label"><%= P === 'underpaid' ? 'Brakująca kwota' : 'Dokładna kwota' %></span>
+              <div class="copy"><code class="big"><%= P === 'underpaid' ? pv.remaining : pv.amount %> <%= pv.asset.symbol %></code><button type="button" data-copy="<%= P === 'underpaid' ? pv.remaining : pv.amount %>">Kopiuj</button></div>
+              <span class="hint"><%= fmt(order.total_minor) %><% if (pv.sharedAddress) { %> · <strong class="text-warn">wyślij co do ostatniej cyfry</strong> — końcówka kwoty identyfikuje Twoje zamówienie<% } %></span>
+            </div>
+            <div class="pay-field">
+              <span class="label">Adres (<%= pv.asset.network %>)</span>
+              <div class="copy"><code><%= pv.address %></code><button type="button" data-copy="<%= pv.address %>">Kopiuj</button></div>
+            </div>
+            <div class="row">
+              <div>
+                <span class="label">Pozostały czas</span>
+                <div class="countdown" data-countdown="<%= pv.expiresAt %>">--:--</div>
+              </div>
+            </div>
+            <div class="progress mt-12" aria-hidden="true"><span data-countdown-bar data-total="<%= Math.max(1, new Date(pv.expiresAt) - new Date(order.created_at.replace(' ', 'T') + 'Z')) %>"></span></div>
+          </div>
+        </div>
+        <% if (P === 'underpaid') { %>
+          <div class="flash flash-warn mt-16">Otrzymaliśmy <%= pv.received %> <%= pv.asset.symbol %> z <%= pv.amount %> <%= pv.asset.symbol %>. Dopłać brakującą kwotę na ten sam adres przed upływem czasu.</div>
+        <% } %>
+        <div class="notice mt-16">
+          <strong>Przed wysłaniem sprawdź:</strong> sieć <strong><%= pv.asset.network %></strong>, adres oraz kwotę.
+          Jeśli płacisz z giełdy, upewnij się, że prowizja za wypłatę nie zostanie odjęta od kwoty. Ta strona odświeży się sama po wykryciu płatności.
+        </div>
+      </section>
+    <% } %>
+
+    <% if (S === 'awaiting_payment' && pv && P === 'confirming') { %>
+      <section class="panel reveal">
+        <h2 class="panel-title"><span class="num"><%- include('../partials/icon', { name: 'clock' }) %></span>Płatność wykryta — czekamy na potwierdzenia</h2>
+        <p class="muted">Transakcja jest w sieci. Zamówienie zostanie zrealizowane automatycznie po <%= pv.required %> potwierdzeniach.</p>
+        <div class="row"><span class="label">Potwierdzenia</span><span class="spacer"></span><strong><span data-confirmations><%= pv.confirmations %></span> / <%= pv.required %></strong></div>
+        <div class="progress mt-8"><span data-progress="<%= Math.round(pv.confirmations / pv.required * 100) %>"></span></div>
+      </section>
+    <% } %>
+
+    <% if (S === 'awaiting_payment' && pv && ['pending', 'underpaid'].includes(P) && pv.expired) { %>
+      <section class="panel">
+        <h2 class="panel-title">Termin płatności minął</h2>
+        <p><strong>Nie wysyłaj już środków.</strong> Jeśli wysłałeś płatność przed terminem, jeszcze przez jakiś czas obserwujemy sieć — zamówienie zostanie zrealizowane automatycznie, gdy transakcja dotrze.</p>
+        <a class="btn btn-secondary" href="/produkty">Wróć do sklepu</a>
+      </section>
+    <% } %>
+
+    <% if (S === 'expired') { %>
+      <section class="panel">
+        <h2 class="panel-title">Zamówienie wygasło</h2>
+        <p class="muted">Nie otrzymaliśmy płatności w wyznaczonym czasie. Jeśli mimo to wysłałeś środki, zgłoś transakcję poniżej lub skontaktuj się z obsługą.</p>
+        <a class="btn btn-primary" href="/produkty">Złóż nowe zamówienie</a>
+      </section>
+    <% } %>
+
+    <% if (S === 'underpaid') { %>
+      <section class="panel">
+        <h2 class="panel-title">Zamówienie niedopłacone</h2>
+        <p>Otrzymaliśmy <strong><%= pv.received %> <%= pv.asset.symbol %></strong> z wymaganych <%= pv.amount %> <%= pv.asset.symbol %>. Skontaktuj się z obsługą<% if (shop.contactEmail) { %> (<a class="link" href="mailto:<%= shop.contactEmail %>"><%= shop.contactEmail %></a>)<% } %>, podając numer zamówienia — dopłacisz brakującą kwotę lub otrzymasz zwrot.</p>
+      </section>
+    <% } %>
+
+    <% if (S === 'paid' || S === 'awaiting_stock') { %>
+      <section class="panel reveal">
+        <h2 class="panel-title"><span class="num"><%- include('../partials/icon', { name: 'check' }) %></span>Płatność potwierdzona</h2>
+        <% if (S === 'paid') { %>
+          <p class="muted">Przygotowujemy Twoje produkty. To potrwa chwilę — strona odświeży się automatycznie.</p>
+        <% } else { %>
+          <p class="muted">Twoje zamówienie jest opłacone, ale realizacja wymaga jeszcze chwili (np. uzupełnienia magazynu lub ręcznej weryfikacji). Wyślemy e-mail, gdy produkty będą gotowe do odbioru.</p>
+        <% } %>
+      </section>
+    <% } %>
+
+    <% if (S === 'fulfilled') { %>
+      <section class="panel reveal">
+        <h2 class="panel-title"><span class="num"><%- include('../partials/icon', { name: 'key' }) %></span>Twoje produkty</h2>
+        <% if (revealed) { %>
+          <% revealed.forEach(function (c) { %>
+            <div class="mb-16">
+              <strong><%= c.item.product_name %></strong> <span class="muted">— <%= c.item.variant_name %> × <%= c.item.quantity %></span>
+              <% c.keys.forEach(function (k) { %>
+                <div class="key-box"><code><%= k %></code><button type="button" data-copy="<%= k %>">Kopiuj</button></div>
+              <% }) %>
+              <% if (c.file) { %>
+                <a class="btn btn-secondary mt-8" href="/pobierz/<%= c.downloadToken %>"><%- include('../partials/icon', { name: 'download' }) %>Pobierz <%= c.file.original_name %> (<%= (c.file.size / 1024 / 1024).toFixed(1) %> MB)</a>
+                <p class="hint">Link do pobrania jest ważny 15 minut.</p>
+              <% } %>
+              <% if (c.manual) { %><div class="key-box"><code><%= c.manual %></code><button type="button" data-copy="<%= c.manual %>">Kopiuj</button></div><% } %>
+            </div>
+          <% }) %>
+          <div class="notice"><strong>Zapisz swoje klucze w bezpiecznym miejscu.</strong> Strona odbioru jest dostępna do <%= util.formatDate(order.delivery_access_until) %>. Nie udostępniaj tego linku innym osobom.</div>
+        <% } else if (accessValid) { %>
+          <p class="muted">Zamówienie zostało zrealizowane <%= util.formatDate(order.fulfilled_at) %>. Kliknij, aby wyświetlić klucze, kody lub pliki.</p>
+          <form method="post" action="/zamowienie/<%= order.public_id %>/odbierz">
+            <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+            <button class="btn btn-primary btn-lg" type="submit"><%- include('../partials/icon', { name: 'key' }) %>Odbierz produkty</button>
+          </form>
+          <p class="hint mt-12">Dostęp ważny do <%= util.formatDate(order.delivery_access_until) %>.</p>
+        <% } else { %>
+          <p>Czas na odbiór produktów minął. Skontaktuj się z obsługą<% if (shop.contactEmail) { %>: <a class="link" href="mailto:<%= shop.contactEmail %>"><%= shop.contactEmail %></a><% } %>.</p>
+        <% } %>
+      </section>
+    <% } %>
+
+    <% if (S === 'refunded') { %>
+      <section class="panel"><h2 class="panel-title">Zamówienie zwrócone</h2><p class="muted">Płatność została zwrócona<% if (order.refund_tx) { %> (transakcja: <span class="mono"><%= order.refund_tx %></span>)<% } %>.</p></section>
+    <% } %>
+    <% if (S === 'cancelled') { %>
+      <section class="panel"><h2 class="panel-title">Zamówienie anulowane</h2><p class="muted">To zamówienie zostało anulowane. W razie pytań skontaktuj się z obsługą.</p></section>
+    <% } %>
+
+    <% if (pv && pv.txs.length) { %>
+      <section class="panel">
+        <h3>Transakcje</h3>
+        <% pv.txs.forEach(function (t) { %>
+          <div class="summary-row"><a class="mono link" href="<%= t.url %>" target="_blank" rel="noopener noreferrer"><%= t.txid.slice(0, 14) %>…<%= t.txid.slice(-8) %></a><span><%= t.amount %> <%= pv.asset.symbol %></span></div>
+        <% }) %>
+        <% if (pv.overpaid) { %><p class="hint">Otrzymaliśmy więcej niż wymagana kwota. Nadwyżkę zwrócimy na Twoją prośbę — napisz do obsługi.</p><% } %>
+      </section>
+    <% } %>
+
+    <% if (pv && pv.sharedAddress !== undefined && (S === 'awaiting_payment' || S === 'expired' || S === 'underpaid') && P !== 'confirming') { %>
+      <details class="disclosure mt-16">
+        <summary>Wysłałem płatność, ale nie została wykryta</summary>
+        <div>
+          <p class="muted small">Jeśli wysłałeś inną kwotę lub po terminie, podaj identyfikator (hash) transakcji. Obsługa sprawdzi go ręcznie.</p>
+          <form method="post" action="/zamowienie/<%= order.public_id %>/zglos" class="discount-form">
+            <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+            <input class="input mono" name="txid" required maxlength="80" placeholder="hash transakcji (TXID)" aria-label="Hash transakcji">
+            <button class="btn btn-secondary btn-sm" type="submit">Zgłoś</button>
+          </form>
+        </div>
+      </details>
+    <% } %>
+  </div>
+
+  <aside class="sticky">
+    <div class="panel">
+      <h3>Status</h3>
+      <ol class="timeline">
+        <li class="done">Zamówienie złożone</li>
+        <li class="<%= isPaid || (pv && pv.txs.length) ? 'done' : (canPay ? 'current' : '') %>">Płatność wysłana</li>
+        <li class="<%= isPaid ? 'done' : (detected ? 'current' : '') %>">Płatność potwierdzona<% if (pv && P === 'confirming') { %> (<%= pv.confirmations %>/<%= pv.required %>)<% } %></li>
+        <li class="<%= S === 'fulfilled' ? 'done' : (isPaid ? 'current' : '') %>">Produkty gotowe do odbioru</li>
+      </ol>
+    </div>
+    <div class="panel">
+      <h3>Podsumowanie</h3>
+      <div class="order-items">
+        <% order.items.forEach(function (it) { %>
+          <div class="order-item">
+            <div class="cart-thumb"><% if (it.thumb) { %><img src="/media/<%= it.thumb %>" alt="" loading="lazy"><% } else { %><div class="ph"><span class="small"><%= it.product_name.slice(0, 2).toUpperCase() %></span></div><% } %></div>
+            <div><strong class="small"><%= it.product_name %></strong><div class="muted small"><%= it.variant_name %> × <%= it.quantity %></div></div>
+            <span class="small"><%= fmt(it.unit_price_minor * it.quantity) %></span>
+          </div>
+        <% }) %>
+      </div>
+      <% if (order.discount_minor) { %><div class="summary-row text-ok mt-12"><span>Rabat (<%= order.discount_code %>)</span><span>−<%= fmt(order.discount_minor) %></span></div><% } %>
+      <div class="summary-row total"><span>Razem</span><b><%= fmt(order.total_minor) %></b></div>
+      <% if (pv) { %><p class="muted small mb-0">Kurs: 1 <%= pv.asset.symbol %> = <%= Number(order.payment.rate).toLocaleString('pl-PL', { maximumFractionDigits: 2 }) %> <%= order.currency %></p><% } %>
+    </div>
+    <p class="muted small">Pytania? <% if (shop.contactEmail) { %><a class="link" href="mailto:<%= shop.contactEmail %>?subject=<%= encodeURIComponent('Zamówienie ' + order.public_id) %>"><%= shop.contactEmail %></a><% } else { %>Skontaktuj się z obsługą sklepu<% } %> — podaj numer zamówienia.</p>
+  </aside>
+</div>
+<%- include('../partials/foot') %>

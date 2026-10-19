@@ -1,0 +1,45 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>Dostawy i e-maile</h1></div>
+<div class="filters-bar">
+  <a class="btn btn-sm <%= !status ? 'btn-primary' : 'btn-secondary' %>" href="?">Wszystkie</a>
+  <a class="btn btn-sm <%= status === 'failed' ? 'btn-primary' : 'btn-secondary' %>" href="?status=failed">Nieudane</a>
+  <a class="btn btn-sm <%= status === 'queued' ? 'btn-primary' : 'btn-secondary' %>" href="?status=queued">W kolejce</a>
+  <a class="btn btn-sm <%= status === 'sent' ? 'btn-primary' : 'btn-secondary' %>" href="?status=sent">Wysłane</a>
+</div>
+<section class="panel mb-16">
+  <h2 class="section-title">Wiadomości e-mail</h2>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Zamówienie</th><th>Do</th><th>Temat</th><th>Status</th><th>Próby</th><th>Data</th><th></th></tr></thead>
+      <tbody>
+        <% emails.forEach(function (e) { %>
+          <tr>
+            <td><% if (e.order_id) { %><a class="mono link" href="<%= A %>/zamowienia/<%= e.order_id %>"><%= e.public_id %></a><% } else { %>—<% } %></td>
+            <td class="small"><%= e.to_addr %></td>
+            <td class="small"><%= e.subject %><% if (e.last_error) { %><div class="error-text small"><%= e.last_error %></div><% } %></td>
+            <td><%- include('_status', { s: e.status }) %></td><td><%= e.attempts %></td>
+            <td class="muted small"><%= util.formatDate(e.sent_at || e.created_at) %></td>
+            <td class="actions"><% if (e.status === 'failed') { %><form method="post" action="<%= A %>/dostawy/email/<%= e.id %>/ponow"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-secondary btn-sm" type="submit">Ponów</button></form><% } %></td>
+          </tr>
+        <% }) %>
+        <% if (!emails.length) { %><tr><td colspan="7" class="muted">Brak wiadomości.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<section class="panel">
+  <h2 class="section-title">Historia realizacji</h2>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Zamówienie</th><th>Wynik</th><th>Szczegóły</th><th>Data</th></tr></thead>
+      <tbody>
+        <% deliveries.forEach(function (d) { %>
+          <tr><td><a class="mono link" href="<%= A %>/zamowienia/<%= d.order_id %>"><%= d.public_id %></a></td><td><%- include('_status', { s: d.status }) %></td><td class="small"><%= d.detail %></td><td class="muted small"><%= util.formatDate(d.created_at) %></td></tr>
+        <% }) %>
+        <% if (!deliveries.length) { %><tr><td colspan="4" class="muted">Brak realizacji.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('_foot') %>

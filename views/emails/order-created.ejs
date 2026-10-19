@@ -1,0 +1,15 @@
+<%- include('_layout-top') %>
+<% const p = order.payment; const A = ASSETS[p.asset]; %>
+<h1 style="font-size:22px;margin:0 0 12px;color:#eef0f5">Dziękujemy za zamówienie!</h1>
+<p>Twoje zamówienie <strong style="color:#c6f432"><%= order.public_id %></strong> czeka na płatność.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0e1016;border-radius:12px;border:1px solid #232836;margin:16px 0">
+<tr><td style="padding:16px 18px;font-size:14px;line-height:1.7">
+  <% order.items.forEach(function (it) { %><%= it.quantity %> × <%= it.product_name %> (<%= it.variant_name %>)<br><% }) %>
+  <strong>Razem: <%= fmt(order.total_minor) %></strong><br>
+  Płatność: <strong><%= money.atomicToDecimal(p.amount_atomic, p.decimals) %> <%= A.symbol %></strong> w sieci <strong><%= A.network %></strong><br>
+  Termin płatności: <%= util.formatDate(p.expires_at) %>
+</td></tr></table>
+<p>Adres i kod QR znajdziesz na stronie zamówienia:</p>
+<%- include('_button', { href: url, label: 'Przejdź do płatności' }) %>
+<p style="font-size:13px;color:#9aa1b2">Potwierdzenie: zażądałeś(-aś) dostarczenia treści cyfrowej przed upływem terminu do odstąpienia od umowy i przyjąłeś(-ęłaś) do wiadomości utratę prawa odstąpienia z chwilą rozpoczęcia dostawy. Złożyłeś(-aś) zamówienie, akceptując <a href="<%= publicUrl %>/strona/regulamin" style="color:#c6f432">regulamin</a>.</p>
+<%- include('_layout-bottom') %>

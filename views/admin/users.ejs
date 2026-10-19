@@ -1,0 +1,44 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>Użytkownicy panelu</h1></div>
+<div class="form-layout">
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Login</th><th>Rola</th><th>2FA</th><th>Ostatnie logowanie</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+        <% rows.forEach(function (u) { %>
+          <tr>
+            <td class="strong"><%= u.username %><% if (u.id === admin.id) { %> <span class="pill info">Ty</span><% } %></td>
+            <td>
+              <% if (u.id !== admin.id) { %>
+                <form method="post" action="<%= A %>/uzytkownicy/<%= u.id %>" class="row"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="role">
+                  <select class="select" name="role"><% Object.entries(roleNames).forEach(function ([k, l]) { %><option value="<%= k %>" <%= u.role === k ? 'selected' : '' %>><%= l %></option><% }) %></select>
+                  <button class="btn btn-ghost btn-sm" type="submit">Zmień</button></form>
+              <% } else { %><%= roleNames[u.role] %><% } %>
+            </td>
+            <td><span class="pill <%= u.totp_enabled ? 'ok' : 'warn' %>"><%= u.totp_enabled ? 'włączone' : 'do konfiguracji' %></span></td>
+            <td class="muted small"><%= util.formatDate(u.last_login_at) %></td>
+            <td><span class="pill <%= u.active ? 'ok' : 'muted' %>"><%= u.active ? 'aktywne' : 'wyłączone' %></span></td>
+            <td class="actions">
+              <form method="post" action="<%= A %>/uzytkownicy/<%= u.id %>" data-confirm="Zresetować 2FA tego konta?"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="reset2fa"><button class="btn btn-ghost btn-sm" type="submit">Reset 2FA</button></form>
+              <% if (u.id !== admin.id) { %><form method="post" action="<%= A %>/uzytkownicy/<%= u.id %>"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="action" value="toggle"><button class="btn btn-secondary btn-sm" type="submit"><%= u.active ? 'Wyłącz' : 'Włącz' %></button></form><% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+  <section class="panel">
+    <h2 class="section-title">Nowe konto</h2>
+    <p class="section-desc"><strong>Menedżer</strong>: produkty, magazyn, zamówienia, rabaty, strony. <strong>Obsługa klienta</strong>: podgląd zamówień i ponowne wysyłki. Ustawienia i konta — tylko właściciel.</p>
+    <form method="post" action="<%= A %>/uzytkownicy" autocomplete="off">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field"><label class="label">Login</label><input class="input" name="username" required maxlength="32"></div>
+      <div class="field"><label class="label">E-mail (opcjonalnie)</label><input class="input" type="email" name="email" maxlength="200"></div>
+      <div class="field"><label class="label">Hasło startowe (min. 12 znaków)</label><input class="input" type="password" name="password" required minlength="12" autocomplete="new-password"></div>
+      <div class="field"><label class="label">Rola</label><select class="select" name="role"><option value="support">Obsługa klienta</option><option value="manager">Menedżer</option><option value="owner">Właściciel</option></select></div>
+      <button class="btn btn-primary btn-block mt-16" type="submit">Utwórz konto</button>
+    </form>
+  </section>
+</div>
+<%- include('_foot') %>

@@ -1,0 +1,21 @@
+<%- include('_head') %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo"><span class="logo-mark"><%- include('../partials/icon', { name: 'lock' }) %></span><span>Panel administratora</span></div>
+    <div class="panel">
+      <% if (expired) { %><div class="flash flash-info mb-16">Sesja wygasła. Zaloguj się ponownie.</div><% } %>
+      <% if (error) { %><div class="flash flash-error mb-16"><%= error %></div><% } %>
+      <% if (!hasUsers) { %>
+        <div class="help">Brak kont administratora. Utwórz konto właściciela na serwerze poleceniem:<br><code>npm run admin:create</code></div>
+      <% } else { %>
+      <form method="post" action="<%= A %>/login" autocomplete="on">
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <div class="field"><label class="label" for="u">Login</label><input class="input" id="u" name="username" required autocomplete="username" autofocus maxlength="64"></div>
+        <div class="field"><label class="label" for="p">Hasło</label><input class="input" id="p" type="password" name="password" required autocomplete="current-password" maxlength="200"></div>
+        <button class="btn btn-primary btn-block mt-16" type="submit">Dalej</button>
+      </form>
+      <% } %>
+    </div>
+  </div>
+</div>
+<%- include('_foot') %>

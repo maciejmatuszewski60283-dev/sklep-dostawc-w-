@@ -1,0 +1,17 @@
+<%- include('../partials/head') %>
+<div class="container page-head"><h1>Znajdź zamówienie</h1></div>
+<div class="container section">
+  <div class="panel narrow">
+    <% if (sent) { %>
+      <div class="flash flash-success mb-16">Jeśli zamówienie o podanym numerze istnieje i pasuje do adresu e-mail, wysłaliśmy na niego nowy link. Poprzednie linki przestały działać.</div>
+    <% } %>
+    <p class="muted">Podaj numer zamówienia (np. NI-ABCD2345) i adres e-mail użyty przy zakupie. Wyślemy nowy link do strony zamówienia.</p>
+    <form method="post" action="/zamowienie">
+      <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+      <div class="field"><label class="label" for="order">Numer zamówienia</label><input class="input mono" id="order" name="order" required maxlength="11" placeholder="NI-XXXXXXXX" autocapitalize="characters"></div>
+      <div class="field"><label class="label" for="em">E-mail</label><input class="input" type="email" id="em" name="email" required maxlength="254" autocomplete="email"></div>
+      <button class="btn btn-primary btn-block mt-16" type="submit">Wyślij link</button>
+    </form>
+  </div>
+</div>
+<%- include('../partials/foot') %>
