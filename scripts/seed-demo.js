@@ -16,21 +16,21 @@ if (config.isProd) {
 }
 
 const DEMO = [
-  { name: 'Steam Wallet — doładowanie', platform: 'steam', category: 'karty-podarunkowe', c1: '#1b2838', c2: '#66c0f4', label: 'STEAM\nWALLET',
+  { name: 'Steam Wallet — doładowanie', platform: 'steam', category: 'gry', c1: '#1b2838', c2: '#66c0f4', label: 'STEAM\nWALLET',
     variants: [['20 zł', 1899, 2000], ['50 zł', 4690, 5000], ['100 zł', 9290, null]], featured: 1 },
-  { name: 'PlayStation Store — karta 100 zł', platform: 'playstation', category: 'karty-podarunkowe', c1: '#0b1c4d', c2: '#4b7bec', label: 'PS\nSTORE',
+  { name: 'PlayStation Store — karta 100 zł', platform: 'playstation', category: 'gry', c1: '#0b1c4d', c2: '#4b7bec', label: 'PS\nSTORE',
     variants: [['100 zł', 9490, 9999]], featured: 1 },
-  { name: 'Xbox Game Pass Ultimate — 1 miesiąc', platform: 'xbox', category: 'subskrypcje', c1: '#0e3b17', c2: '#3ec46d', label: 'GAME\nPASS',
+  { name: 'Xbox Game Pass Ultimate — 1 miesiąc', platform: 'xbox', category: 'gry', c1: '#0e3b17', c2: '#3ec46d', label: 'GAME\nPASS',
     variants: [['1 miesiąc', 5990, 6999], ['3 miesiące', 16990, null]], featured: 1 },
-  { name: 'Minecraft: Java & Bedrock Edition', platform: 'minecraft', category: 'klucze-do-gier', c1: '#2d4a1e', c2: '#7bc96f', label: 'MINE\nCRAFT',
+  { name: 'Minecraft: Java & Bedrock Edition', platform: 'minecraft', category: 'gry', c1: '#2d4a1e', c2: '#7bc96f', label: 'MINE\nCRAFT',
     variants: [['PC — Global', 8990, 11900]], featured: 1 },
-  { name: 'Roblox — karta 800 Robux', platform: 'roblox', category: 'waluty-i-przedmioty', c1: '#222', c2: '#e8e8e8', label: '800\nROBUX',
+  { name: 'Roblox — karta 800 Robux', platform: 'roblox', category: 'gry', c1: '#222', c2: '#e8e8e8', label: '800\nROBUX',
     variants: [['800 Robux', 3990, null], ['2000 Robux', 9490, null]] },
-  { name: 'Nintendo eShop — 100 zł', platform: 'nintendo', category: 'karty-podarunkowe', c1: '#5a0d12', c2: '#ff5a5f', label: 'NINTENDO\neSHOP',
+  { name: 'Nintendo eShop — 100 zł', platform: 'nintendo', category: 'gry', c1: '#5a0d12', c2: '#ff5a5f', label: 'NINTENDO\neSHOP',
     variants: [['100 zł', 9590, null]] },
-  { name: 'Windows 11 Pro — licencja', platform: 'windows', category: 'oprogramowanie', c1: '#00243a', c2: '#00a4ef', label: 'WIN 11\nPRO',
+  { name: 'Windows 11 Pro — licencja', platform: 'windows', category: 'gry', c1: '#00243a', c2: '#00a4ef', label: 'WIN 11\nPRO',
     variants: [['Licencja', 4990, 7990]], featured: 1 },
-  { name: 'Battle.net — 20 EUR', platform: 'battle-net', category: 'karty-podarunkowe', c1: '#0a2540', c2: '#3fa9f5', label: 'BATTLE\n.NET',
+  { name: 'Battle.net — 20 EUR', platform: 'battle-net', category: 'gry', c1: '#0a2540', c2: '#3fa9f5', label: 'BATTLE\n.NET',
     variants: [['20 EUR', 8790, null]] },
 ];
 

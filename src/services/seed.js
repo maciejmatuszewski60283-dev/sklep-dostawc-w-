@@ -225,11 +225,14 @@ Sprawdź region i wymagania podane w opisie produktu, a następnie napisz do nas
 ];
 
 const CATEGORIES = [
-  ['Klucze do gier', 'klucze-do-gier', 'Klucze aktywacyjne do gier na różne platformy.'],
-  ['Karty podarunkowe', 'karty-podarunkowe', 'Doładowania portfeli i karty podarunkowe.'],
-  ['Waluty i przedmioty w grach', 'waluty-i-przedmioty', 'Waluty wirtualne i przedmioty dystrybuowane przez autoryzowane kanały.'],
-  ['Subskrypcje', 'subskrypcje', 'Kody subskrypcji usług i abonamentów.'],
-  ['Oprogramowanie', 'oprogramowanie', 'Licencje na programy i narzędzia.'],
+  ['Discord', 'discord', 'Nitro, boosty serwerów i inne produkty związane z Discordem.'],
+  ['Streaming', 'streaming', 'Subskrypcje i kody do serwisów streamingowych.'],
+  ['Gry', 'gry', 'Klucze do gier, karty podarunkowe i waluty w grach.'],
+  ['AI', 'ai', 'Subskrypcje i kredyty do narzędzi sztucznej inteligencji.'],
+  ['VPN', 'vpn', 'Licencje i subskrypcje usług VPN.'],
+  ['Muzyka', 'muzyka', 'Subskrypcje i kody do serwisów muzycznych.'],
+  ['Cheaty', 'cheaty', 'Oprogramowanie dodatkowe do gier.'],
+  ['Social Boost', 'social-boost', 'Usługi promocji w mediach społecznościowych.'],
 ];
 
 const PLATFORMS = [
