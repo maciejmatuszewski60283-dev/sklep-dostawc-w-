@@ -1,0 +1,35 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Ustawienia ogólne</h1></div>
+<form method="post" action="<%= A %>/ustawienia/ogolne" class="stack">
+  <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+  <section class="panel">
+    <h2 class="section-title">Sklep</h2>
+    <div class="form-grid">
+      <div class="field"><label class="label">Nazwa sklepu</label><input class="input" name="shop.name" maxlength="60" value="<%= s.get('shop.name') %>"></div>
+      <div class="field"><label class="label">Waluta cen</label><select class="select" name="shop.currency"><% ['PLN','EUR','USD'].forEach(function (c) { %><option <%= s.get('shop.currency') === c ? 'selected' : '' %>><%= c %></option><% }) %></select><span class="hint">Zmiana nie przelicza istniejących cen.</span></div>
+      <div class="field full"><label class="label">Hasło sklepu (opis w stopce i wynikach wyszukiwania)</label><input class="input" name="shop.tagline" maxlength="200" value="<%= s.get('shop.tagline') %>"></div>
+      <div class="field"><label class="label">E-mail obsługi klienta (publiczny)</label><input class="input" type="email" name="shop.contact_email" maxlength="200" value="<%= s.get('shop.contact_email') %>"><span class="hint">Użyj osobnej skrzynki służbowej, nie prywatnej.</span></div>
+      <div class="field"><label class="label">Godziny obsługi</label><input class="input" name="shop.support_hours" maxlength="100" value="<%= s.get('shop.support_hours') %>"></div>
+      <div class="field full"><label class="label">Pasek ogłoszeń (puste = ukryty)</label><input class="input" name="shop.announcement" maxlength="200" value="<%= s.get('shop.announcement') %>" placeholder="np. −10% z kodem START10"></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">Strona główna</h2>
+    <div class="form-grid">
+      <div class="field full"><label class="label">Nagłówek (nowa linia = Enter)</label><textarea class="textarea" name="home.hero_title" rows="2" maxlength="120"><%= s.get('home.hero_title') %></textarea></div>
+      <div class="field full"><label class="label">Podtytuł</label><textarea class="textarea" name="home.hero_subtitle" rows="2" maxlength="300"><%= s.get('home.hero_subtitle') %></textarea></div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">Zamówienia i dostawa</h2>
+    <div class="form-grid">
+      <div class="field"><label class="label">Czas na płatność (minuty)</label><input class="input" name="checkout.payment_window_minutes" inputmode="numeric" value="<%= s.get('checkout.payment_window_minutes') %>"><span class="hint">Przez ten czas kurs jest zablokowany. Zalecane 30–60.</span></div>
+      <div class="field"><label class="label">Obserwacja spóźnionych płatności (godziny)</label><input class="input" name="checkout.late_grace_hours" inputmode="numeric" value="<%= s.get('checkout.late_grace_hours') %>"><span class="hint">Płatności, które dotrą po terminie, zostaną zaakceptowane i oznaczone „po terminie”.</span></div>
+      <div class="field"><label class="label">Maks. nieopłaconych zamówień na e-mail</label><input class="input" name="checkout.max_pending_per_email" inputmode="numeric" value="<%= s.get('checkout.max_pending_per_email') %>"><span class="hint">Ochrona przed blokowaniem magazynu przez spam.</span></div>
+      <div class="field"><label class="label">Dostęp do odbioru produktów (dni)</label><input class="input" name="delivery.access_days" inputmode="numeric" value="<%= s.get('delivery.access_days') %>"></div>
+      <div class="field"><label class="label">Próg niskiego stanu kluczy</label><input class="input" name="stock.low_threshold" inputmode="numeric" value="<%= s.get('stock.low_threshold') %>"></div>
+    </div>
+  </section>
+  <div><button class="btn btn-primary" type="submit">Zapisz ustawienia</button></div>
+</form>
+<%- include('_foot') %>

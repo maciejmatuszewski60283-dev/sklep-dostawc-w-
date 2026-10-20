@@ -1,0 +1,8 @@
+<%- include('../partials/head') %>
+<div class="container page-head">
+  <nav class="breadcrumbs" aria-label="Okruszki"><a href="/">Start</a><span>/</span><span><%= page.title %></span></nav>
+  <h1><%= page.title %></h1>
+  <p class="muted small">Ostatnia aktualizacja: <%= util.formatDate(page.updated_at) %></p>
+</div>
+<div class="container section"><article class="prose"><%- html %></article></div>
+<%- include('../partials/foot') %>

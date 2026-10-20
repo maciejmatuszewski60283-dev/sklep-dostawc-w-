@@ -1,0 +1,75 @@
+<%- include('../partials/head') %>
+<div class="container page-head">
+  <nav class="breadcrumbs"><a href="/koszyk">Koszyk</a><span>/</span><span>Kasa</span></nav>
+  <h1>Kasa</h1>
+</div>
+<div class="container">
+  <% if (error) { %><div class="flash flash-error"><%= error %></div><% } %>
+  <form class="two-col" method="post" action="/kasa" novalidate data-checkout>
+    <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+    <div class="hp-field" aria-hidden="true"><label>Strona www <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+    <div>
+      <section class="panel">
+        <h2 class="panel-title"><span class="num">1</span>Adres e-mail</h2>
+        <p class="muted small">Na ten adres wyślemy link do odbioru produktów. Sprawdź go dokładnie.</p>
+        <div class="field">
+          <label class="label" for="email">E-mail</label>
+          <input class="input <%= errors.email ? 'invalid' : '' %>" type="email" id="email" name="email" value="<%= form.email %>" required autocomplete="email" maxlength="254" inputmode="email">
+          <% if (errors.email) { %><span class="error-text"><%= errors.email %></span><% } %>
+        </div>
+        <div class="field">
+          <label class="label" for="email2">Powtórz e-mail</label>
+          <input class="input <%= errors.email2 ? 'invalid' : '' %>" type="email" id="email2" name="email2" value="<%= form.email2 %>" required autocomplete="email" maxlength="254" inputmode="email">
+          <% if (errors.email2) { %><span class="error-text"><%= errors.email2 %></span><% } %>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title"><span class="num">2</span>Kryptowaluta i sieć</h2>
+        <% if (!assets.length) { %>
+          <div class="flash flash-warn">Płatności są chwilowo niedostępne. Spróbuj ponownie później.</div>
+        <% } else { %>
+          <div class="asset-grid" role="radiogroup" aria-label="Wybierz kryptowalutę">
+            <% assets.forEach(function (a) { %>
+              <div class="asset-opt">
+                <input type="radio" name="asset" id="a-<%= a.code %>" value="<%= a.code %>" <%= form.asset === a.code ? 'checked' : '' %> required>
+                <label for="a-<%= a.code %>">
+                  <span class="coin-ic <%= a.icon %>"><%= a.symbol.slice(0, 4) %></span>
+                  <span><strong><%= a.symbol %></strong><small><%= a.network %></small></span>
+                </label>
+              </div>
+            <% }) %>
+          </div>
+          <% if (errors.asset) { %><p class="error-text mt-8"><%= errors.asset %></p><% } %>
+          <div class="notice mt-16"><strong>Ważne:</strong> wyślij środki dokładnie w wybranej sieci. Przelew w innej sieci (np. ERC-20 zamiast TRC-20) jest nieodwracalny i może skończyć się utratą środków.</div>
+        <% } %>
+      </section>
+
+      <section class="panel">
+        <h2 class="panel-title"><span class="num">3</span>Zgody</h2>
+        <label class="check"><input type="checkbox" name="terms" value="1" required> <span>Akceptuję <a href="/strona/regulamin" target="_blank" rel="noopener">regulamin</a> i zapoznałem(-am) się z <a href="/strona/polityka-prywatnosci" target="_blank" rel="noopener">polityką prywatności</a>.</span></label>
+        <% if (errors.terms) { %><p class="error-text"><%= errors.terms %></p><% } %>
+        <label class="check mt-12"><input type="checkbox" name="withdrawal" value="1" required> <span>Żądam dostarczenia treści cyfrowej przed upływem terminu do odstąpienia od umowy i przyjmuję do wiadomości, że <strong>tracę prawo odstąpienia</strong> z chwilą rozpoczęcia dostawy.</span></label>
+        <% if (errors.withdrawal) { %><p class="error-text"><%= errors.withdrawal %></p><% } %>
+      </section>
+    </div>
+
+    <aside class="sticky">
+      <div class="panel">
+        <h3>Twoje zamówienie</h3>
+        <div class="order-items">
+          <% summary.items.forEach(function (it) { %>
+            <div class="summary-row"><span><%= it.qty %> × <%= it.variant.product_name %> <span class="muted">(<%= it.variant.name %>)</span></span><span><%= fmt(it.lineTotal) %></span></div>
+          <% }) %>
+        </div>
+        <% if (summary.discount.amount) { %><div class="summary-row text-ok"><span>Rabat (<%= summary.discount.code %>)</span><span>−<%= fmt(summary.discount.amount) %></span></div><% } %>
+        <div class="summary-row total"><span>Do zapłaty</span><b><%= fmt(summary.total) %></b></div>
+        <button class="btn btn-primary btn-lg btn-block mt-16" type="submit" <%= assets.length && summary.valid ? '' : 'disabled' %> data-submit>
+          <%- include('../partials/icon', { name: 'lock' }) %>Zamawiam i płacę
+        </button>
+        <p class="muted small mt-12 mb-0">Po kliknięciu zobaczysz adres i dokładną kwotę w wybranej kryptowalucie. Kurs jest blokowany na czas płatności.</p>
+      </div>
+    </aside>
+  </form>
+</div>
+<%- include('../partials/foot') %>

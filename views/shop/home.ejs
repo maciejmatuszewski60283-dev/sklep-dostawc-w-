@@ -1,0 +1,93 @@
+<%- include('../partials/head') %>
+<section class="hero">
+  <div class="container hero-grid">
+    <div class="reveal">
+      <span class="eyebrow"><span class="pulse"></span>Dostawa automatyczna 24/7</span>
+      <h1><%= shop.heroTitle %></h1>
+      <p class="hero-lead"><%= shop.heroSubtitle %></p>
+      <form class="hero-search" action="/szukaj" method="get" role="search">
+        <input type="search" name="q" placeholder="Czego szukasz? np. Steam, Minecraft…" aria-label="Szukaj" maxlength="100">
+        <button class="btn btn-primary" type="submit"><%- include('../partials/icon', { name: 'search' }) %>Szukaj</button>
+      </form>
+      <div class="hero-meta">
+        <span><%- include('../partials/icon', { name: 'bolt' }) %>Odbiór od razu po potwierdzeniu</span>
+        <span><%- include('../partials/icon', { name: 'coin' }) %>Tylko krypto</span>
+        <span><%- include('../partials/icon', { name: 'lock' }) %>Bez zakładania konta</span>
+      </div>
+    </div>
+    <div class="hero-card" aria-hidden="true">
+      <div class="hero-card-head"><span>Zamówienie NI-7K2Q9XHA</span><span class="ok">● opłacone</span></div>
+      <% (featured.length ? featured.slice(0, 3) : [{ name: 'Twój produkt cyfrowy', platform_name: 'Steam' }, { name: 'Karta podarunkowa', platform_name: 'PlayStation' }, { name: 'Subskrypcja', platform_name: 'Xbox' }]).forEach(function (p) { %>
+        <div class="ticket">
+          <div class="ticket-ic"><%= (p.platform_name || p.name).slice(0, 2).toUpperCase() %></div>
+          <div><strong><%= p.name.length > 28 ? p.name.slice(0, 28) + '…' : p.name %></strong><small><%= p.platform_name || 'Produkt cyfrowy' %></small></div>
+          <span class="ok"><%- include('../partials/icon', { name: 'check' }) %>dostarczono</span>
+        </div>
+      <% }) %>
+      <div class="hero-card-foot"><span class="muted small">Czas dostawy</span><b>&lt; 5 min</b></div>
+    </div>
+  </div>
+</section>
+
+<% const withProducts = platforms.filter(p => p.product_count > 0); %>
+<% if (withProducts.length) { %>
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>Platformy</h2><p>Wybierz, gdzie grasz lub z czego korzystasz.</p></div></div>
+    <div class="platform-grid">
+      <% withProducts.forEach(function (p) { %>
+        <a class="platform-tile" href="/platforma/<%= p.slug %>" data-color="<%= p.color %>">
+          <span class="pt-dot"></span>
+          <span><span class="pt-name"><%= p.name %></span><br><span class="pt-count"><%= p.product_count %> <%= p.product_count === 1 ? 'produkt' : (p.product_count % 10 >= 2 && p.product_count % 10 <= 4 && (p.product_count % 100 < 10 || p.product_count % 100 >= 20)) ? 'produkty' : 'produktów' %></span></span>
+        </a>
+      <% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head">
+      <div><h2>Polecane</h2><p>Najlepsze ceny, dostępne od ręki.</p></div>
+      <a class="btn btn-secondary btn-sm" href="/produkty">Cały katalog <%- include('../partials/icon', { name: 'arrow' }) %></a>
+    </div>
+    <% if (featured.length) { %>
+      <div class="grid"><% featured.forEach(function (p) { %><%- include('../partials/card', { p }) %><% }) %></div>
+    <% } else { %>
+      <div class="empty"><%- include('../partials/icon', { name: 'box' }) %><h3>Wkrótce pierwsze produkty</h3><p>Sklep właśnie się rozkręca. Zajrzyj niebawem!</p></div>
+    <% } %>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>Jak to działa</h2><p>Trzy kroki, zero formalności.</p></div></div>
+    <div class="steps">
+      <div class="step"><h3>Wybierz produkt</h3><p>Dodaj do koszyka i podaj adres e-mail. Nie musisz zakładać konta.</p></div>
+      <div class="step"><h3>Zapłać w krypto</h3><p>Wyślij dokładną kwotę na wskazany adres. Strona sama wykryje płatność.</p></div>
+      <div class="step"><h3>Odbierz od razu</h3><p>Po potwierdzeniu w sieci dostaniesz e-mail z linkiem do bezpiecznego odbioru.</p></div>
+    </div>
+  </div>
+</section>
+
+<% if (acceptedAssets.length) { %>
+<section class="section">
+  <div class="container">
+    <div class="section-head"><div><h2>Akceptujemy</h2><p>Zawsze zwracaj uwagę na sieć przy wysyłce.</p></div></div>
+    <div class="coins">
+      <% acceptedAssets.forEach(function (a) { %><span class="coin"><span class="coin-ic <%= a.icon %>"><%= a.symbol.slice(0, 4) %></span><%= a.symbol %> <small><%= a.network %></small></span><% }) %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<section class="section">
+  <div class="container">
+    <div class="cta-band">
+      <div><h2>Masz pytanie o zamówienie?</h2><p>Znajdziesz je po numerze i adresie e-mail — wyślemy nowy link.</p></div>
+      <a class="btn btn-lg" href="/zamowienie">Znajdź zamówienie <%- include('../partials/icon', { name: 'arrow' }) %></a>
+    </div>
+  </div>
+</section>
+<%- include('../partials/foot') %>

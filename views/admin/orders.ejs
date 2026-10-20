@@ -1,0 +1,37 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Zamówienia</h1><span class="muted"><%= total %> wyników</span></div>
+<form class="filters-bar" method="get">
+  <input class="input grow" name="q" value="<%= filters.q %>" placeholder="Numer, e-mail, adres portfela lub hash transakcji">
+  <select class="select" name="status"><option value="">Każdy status</option><% Object.entries(STATUS_LABELS).forEach(function ([k, l]) { %><option value="<%= k %>" <%= filters.status === k ? 'selected' : '' %>><%= l %></option><% }) %></select>
+  <select class="select" name="waluta"><option value="">Każda waluta</option><% Object.values(ASSETS).forEach(function (a) { %><option value="<%= a.code %>" <%= filters.asset === a.code ? 'selected' : '' %>><%= a.symbol %> · <%= a.network %></option><% }) %></select>
+  <input class="input" type="date" name="od" value="<%= filters.from %>" aria-label="Od">
+  <input class="input" type="date" name="do" value="<%= filters.to %>" aria-label="Do">
+  <button class="btn btn-secondary btn-sm" type="submit">Filtruj</button>
+</form>
+<div class="table-wrap">
+  <table class="t">
+    <thead><tr><th>Numer</th><th>E-mail</th><th>Produkty</th><th>Kwota</th><th>Waluta</th><th>Status</th><th>Data</th></tr></thead>
+    <tbody>
+      <% rows.forEach(function (o) { %>
+        <tr>
+          <td><a class="strong mono" href="<%= A %>/zamowienia/<%= o.id %>"><%= o.public_id %></a></td>
+          <td><%= o.email %></td>
+          <td class="small"><%= (o.products || '').length > 60 ? o.products.slice(0, 60) + '…' : o.products %></td>
+          <td><%= fmt(o.total_minor) %></td>
+          <td><%= o.asset ? ASSETS[o.asset].symbol + ' ' + ASSETS[o.asset].network.split(' ')[0] : '—' %></td>
+          <td><%- include('_status', { s: o.status }) %></td>
+          <td class="muted small"><%= util.formatDate(o.created_at) %></td>
+        </tr>
+      <% }) %>
+      <% if (!rows.length) { %><tr><td colspan="7" class="muted">Brak zamówień spełniających kryteria.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<% if (pages > 1) { %>
+  <nav class="pagination">
+    <% for (let i = 1; i <= pages; i++) { const qs = new URLSearchParams({ q: filters.q, status: filters.status, waluta: filters.asset, od: filters.from, do: filters.to, strona: i }).toString(); %>
+      <% if (i === page) { %><span class="current"><%= i %></span><% } else if (i <= 2 || i > pages - 2 || Math.abs(i - page) <= 2) { %><a href="?<%= qs %>"><%= i %></a><% } %>
+    <% } %>
+  </nav>
+<% } %>
+<%- include('_foot') %>

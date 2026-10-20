@@ -1,0 +1,6 @@
+<%- include('_layout-top') %>
+<h1 style="font-size:22px;margin:0 0 12px;color:#eef0f5">Płatność otrzymana</h1>
+<p>Płatność za zamówienie <strong style="color:#c6f432"><%= order.public_id %></strong> została potwierdzona. Realizacja potrwa jeszcze chwilę — wyślemy kolejną wiadomość, gdy produkty będą gotowe do odbioru.</p>
+<p>Jeśli wolisz zwrot zamiast oczekiwania, odpowiedz obsłudze, podając numer zamówienia.</p>
+<%- include('_button', { href: url, label: 'Sprawdź status zamówienia' }) %>
+<%- include('_layout-bottom') %>

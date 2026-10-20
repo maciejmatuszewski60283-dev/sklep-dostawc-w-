@@ -1,0 +1,63 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Pulpit</h1><a class="btn btn-primary" href="<%= A %>/produkty/nowy">+ Dodaj produkt</a></div>
+
+<% if (!Object.values(setup).every(Boolean)) { %>
+<div class="panel mb-16">
+  <h3 class="section-title">Pierwsze kroki</h3>
+  <p class="section-desc">Uzupełnij te elementy, zanim udostępnisz sklep klientom.</p>
+  <ul class="checklist">
+    <li><span class="ic <%= setup.payments ? 'y' : 'n' %>"><%= setup.payments ? '✓' : '!' %></span><a href="<%= A %>/ustawienia/platnosci">Skonfiguruj i przetestuj co najmniej jedną kryptowalutę</a></li>
+    <li><span class="ic <%= setup.smtp ? 'y' : 'n' %>"><%= setup.smtp ? '✓' : '!' %></span><a href="<%= A %>/ustawienia/email">Skonfiguruj wysyłkę e-maili (SMTP) i wyślij test</a></li>
+    <li><span class="ic <%= setup.contact ? 'y' : 'n' %>"><%= setup.contact ? '✓' : '!' %></span><a href="<%= A %>/ustawienia/ogolne">Podaj e-mail kontaktowy obsługi</a></li>
+    <li><span class="ic <%= setup.legal ? 'y' : 'n' %>"><%= setup.legal ? '✓' : '!' %></span><a href="<%= A %>/strony">Uzupełnij regulamin i dokumenty (pola [DO UZUPEŁNIENIA])</a></li>
+    <li><span class="ic <%= setup.products ? 'y' : 'n' %>"><%= setup.products ? '✓' : '!' %></span><a href="<%= A %>/produkty/nowy">Dodaj i opublikuj pierwszy produkt</a></li>
+  </ul>
+</div>
+<% } %>
+
+<div class="stats">
+  <div class="stat"><div class="k">Sprzedaż dziś</div><div class="v accent"><%= fmt(stats.revenueToday) %></div></div>
+  <div class="stat"><div class="k">Opłacone zamówienia dziś</div><div class="v"><%= stats.ordersToday %></div></div>
+  <div class="stat"><div class="k">Sprzedaż 30 dni</div><div class="v"><%= fmt(stats.revenue30) %></div></div>
+  <div class="stat"><div class="k">Zamówienia 30 dni</div><div class="v"><%= stats.orders30 %></div></div>
+  <div class="stat"><div class="k">Czeka na płatność</div><div class="v"><%= stats.awaitingPayment %></div></div>
+  <div class="stat"><div class="k">Aktywne produkty</div><div class="v"><%= stats.products %></div></div>
+</div>
+
+<div class="grid-2">
+  <div class="panel">
+    <h3 class="section-title">Sprzedaż — ostatnie 14 dni</h3>
+    <% const max = Math.max(1, ...days.map(d => d.s)); %>
+    <div class="bars" role="img" aria-label="Wykres sprzedaży z 14 dni">
+      <% days.forEach(function (d) { %>
+        <div class="bar" title="<%= d.d %>: <%= fmt(d.s) %> (<%= d.n %> zam.)"><span class="b <%= d.s ? '' : 'zero' %>" data-width="<%= Math.max(2, Math.round(d.s / max * 100)) %>"></span><small><%= d.d.slice(8) %></small></div>
+      <% }) %>
+    </div>
+  </div>
+  <div class="panel">
+    <h3 class="section-title">Wymaga uwagi</h3>
+    <% if (!attention.length && !lowStock.length) { %><p class="muted">Wszystko w porządku 🎉</p><% } %>
+    <% attention.forEach(function (o) { %>
+      <div class="summary-row"><a class="link mono" href="<%= A %>/zamowienia/<%= o.id %>"><%= o.public_id %></a><span class="pill <%= o.status === 'underpaid' ? 'bad' : 'warn' %>"><%= o.status === 'underpaid' ? 'Niedopłacone' : 'Czeka na towar' %></span></div>
+    <% }) %>
+    <% lowStock.forEach(function (v) { %>
+      <div class="summary-row"><a href="<%= A %>/magazyn/<%= v.id %>"><%= v.product_name %> — <%= v.name %></a><span class="pill <%= v.stock === 0 ? 'bad' : 'warn' %>">Klucze: <%= v.stock %></span></div>
+    <% }) %>
+  </div>
+</div>
+
+<div class="panel mt-16">
+  <div class="row mb-16"><h3 class="section-title mb-0">Ostatnie zamówienia</h3><span class="spacer"></span><a class="btn btn-secondary btn-sm" href="<%= A %>/zamowienia">Wszystkie</a></div>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Numer</th><th>E-mail</th><th>Kwota</th><th>Status</th><th>Data</th></tr></thead>
+      <tbody>
+        <% recent.forEach(function (o) { %>
+          <tr><td><a class="strong mono" href="<%= A %>/zamowienia/<%= o.id %>"><%= o.public_id %></a></td><td><%= o.email %></td><td><%= fmt(o.total_minor) %></td><td><%- include('_status', { s: o.status }) %></td><td class="muted"><%= util.formatDate(o.created_at) %></td></tr>
+        <% }) %>
+        <% if (!recent.length) { %><tr><td colspan="5" class="muted">Brak zamówień.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</div>
+<%- include('_foot') %>

@@ -1,0 +1,16 @@
+<%- include('_head') %>
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo"><span class="logo-mark"><%- include('../partials/icon', { name: 'shield' }) %></span><span>Weryfikacja dwuetapowa</span></div>
+    <div class="panel">
+      <% if (error) { %><div class="flash flash-error mb-16"><%= error %></div><% } %>
+      <p class="muted">Wpisz 6-cyfrowy kod z aplikacji uwierzytelniającej albo jeden z kodów odzyskiwania.</p>
+      <form method="post" action="<%= A %>/2fa">
+        <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+        <div class="field"><label class="label" for="c">Kod</label><input class="input mono" id="c" name="code" required autocomplete="one-time-code" inputmode="numeric" autofocus maxlength="12"></div>
+        <button class="btn btn-primary btn-block mt-16" type="submit">Zaloguj</button>
+      </form>
+    </div>
+  </div>
+</div>
+<%- include('_foot') %>

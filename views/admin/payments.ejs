@@ -1,0 +1,79 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>Płatności</h1></div>
+<div class="help mb-16">Tu trafiają wpływy na wspólne adresy (ETH/USDT/USDC), których system nie mógł automatycznie dopasować do zamówienia — zwykle gdy klient wysłał inną kwotę (np. giełda odjęła prowizję). Sprawdź kwotę i czas, porozmawiaj z klientem i przypisz wpływ do właściwego zamówienia. Po przypisaniu system sam zweryfikuje transakcję w sieci.</div>
+
+<section class="panel mb-16">
+  <h2 class="section-title">Nieprzypisane wpływy</h2>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Sieć</th><th>Kwota</th><th>Transakcja</th><th>Wykryto</th><th>Przypisz do płatności</th></tr></thead>
+      <tbody>
+        <% unmatched.forEach(function (u) { const a = ASSETS[u.asset]; %>
+          <tr>
+            <td><%= a.symbol %> · <%= a.network %></td>
+            <td class="mono"><%= atomicToDecimal(u.amount_atomic, a.decimals) %></td>
+            <td><a class="mono link" href="<%= a.explorerTx + u.txid %>" target="_blank" rel="noopener noreferrer"><%= u.txid.slice(0, 16) %>…</a></td>
+            <td class="muted small"><%= util.formatDate(u.seen_at) %></td>
+            <td>
+              <% if (u.assigned_payment_id) { %><span class="pill ok">przypisano do #<%= u.assigned_payment_id %></span><% } else if (can('orders.manage')) { %>
+                <form method="post" action="<%= A %>/platnosci/przypisz" class="row" data-confirm="Przypisać ten wpływ do wybranego zamówienia?">
+                  <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="unmatched_id" value="<%= u.id %>">
+                  <select class="select" name="payment_id" required>
+                    <option value="">wybierz…</option>
+                    <% open.filter(o => o.asset === u.asset).forEach(function (o) { %><option value="<%= o.id %>"><%= o.public_id %> — <%= atomicToDecimal(o.amount_atomic, o.decimals) %> (<%= o.status %>)</option><% }) %>
+                  </select>
+                  <button class="btn btn-primary btn-sm" type="submit">Przypisz</button>
+                </form>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+        <% if (!unmatched.length) { %><tr><td colspan="5" class="muted">Brak nieprzypisanych wpływów.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel mb-16">
+  <h2 class="section-title">Zgłoszenia klientów</h2>
+  <p class="section-desc">Klient podał hash transakcji. Jeśli transakcja trafiła na wspólny adres, pojawi się w tabeli powyżej — przypisz ją. Dla BTC/LTC sprawdź transakcję w eksploratorze.</p>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>Zamówienie</th><th>Hash</th><th>Status</th><th>Data</th><th></th></tr></thead>
+      <tbody>
+        <% claims.forEach(function (c) { const a = ASSETS[c.asset]; %>
+          <tr>
+            <td><a class="mono link" href="<%= A %>/zamowienia/<%= c.order_id %>"><%= c.public_id %></a><div class="muted small"><%= atomicToDecimal(c.amount_atomic, c.decimals) %> <%= a.symbol %></div></td>
+            <td><a class="mono link small" href="<%= a.explorerTx + c.txid %>" target="_blank" rel="noopener noreferrer"><%= c.txid.slice(0, 20) %>…</a></td>
+            <td><%- include('_status', { s: c.status }) %></td>
+            <td class="muted small"><%= util.formatDate(c.created_at) %></td>
+            <td class="actions"><% if (c.status === 'open' && can('orders.manage')) { %><form method="post" action="<%= A %>/platnosci/zgloszenie/<%= c.id %>/odrzuc"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-sm" type="submit">Odrzuć</button></form><% } %></td>
+          </tr>
+        <% }) %>
+        <% if (!claims.length) { %><tr><td colspan="5" class="muted">Brak zgłoszeń.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="panel">
+  <h2 class="section-title">Ostatnie płatności</h2>
+  <div class="table-wrap">
+    <table class="t">
+      <thead><tr><th>#</th><th>Zamówienie</th><th>Sieć</th><th>Kwota</th><th>Otrzymano</th><th>Status</th><th>Utworzono</th></tr></thead>
+      <tbody>
+        <% recent.forEach(function (p) { const a = ASSETS[p.asset]; %>
+          <tr>
+            <td class="muted"><%= p.id %></td><td><a class="mono link" href="<%= A %>/zamowienia/<%= p.order_id %>"><%= p.public_id %></a></td>
+            <td><%= a.symbol %> <span class="muted small"><%= a.network %></span></td>
+            <td class="mono small"><%= atomicToDecimal(p.amount_atomic, p.decimals) %></td><td class="mono small"><%= atomicToDecimal(p.received_atomic, p.decimals) %></td>
+            <td><%- include('_status', { s: p.status }) %></td><td class="muted small"><%= util.formatDate(p.created_at) %></td>
+          </tr>
+        <% }) %>
+        <% if (!recent.length) { %><tr><td colspan="7" class="muted">Brak płatności.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+</section>
+<%- include('_foot') %>

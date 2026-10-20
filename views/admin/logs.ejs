@@ -1,0 +1,25 @@
+<%- include('_head') %>
+<div class="content-head"><h1>Dziennik zdarzeń</h1></div>
+<form class="filters-bar" method="get">
+  <select class="select" name="kategoria"><option value="">Wszystkie kategorie</option><% [['security','Bezpieczeństwo'],['payment','Płatności'],['order','Zamówienia'],['email','E-mail'],['admin','Działania w panelu'],['system','System']].forEach(function ([k, l]) { %><option value="<%= k %>" <%= category === k ? 'selected' : '' %>><%= l %></option><% }) %></select>
+  <select class="select" name="poziom"><option value="">Każdy poziom</option><option value="info" <%= level === 'info' ? 'selected' : '' %>>Info</option><option value="warn" <%= level === 'warn' ? 'selected' : '' %>>Ostrzeżenie</option><option value="error" <%= level === 'error' ? 'selected' : '' %>>Błąd</option></select>
+  <button class="btn btn-secondary btn-sm" type="submit">Filtruj</button>
+</form>
+<div class="table-wrap">
+  <table class="t">
+    <thead><tr><th>Czas</th><th>Poziom</th><th>Kategoria</th><th>Zdarzenie</th><th>Kto / IP</th></tr></thead>
+    <tbody>
+      <% rows.forEach(function (e) { %>
+        <tr>
+          <td class="muted small"><%= util.formatDate(e.ts) %></td>
+          <td><span class="pill <%= e.level === 'error' ? 'bad' : e.level === 'warn' ? 'warn' : 'muted' %>"><%= e.level %></span></td>
+          <td class="small"><%= e.category %></td>
+          <td><%= e.message %><% if (e.meta) { %><pre class="log"><%= e.meta %></pre><% } %></td>
+          <td class="small muted"><%= e.username || '' %><%= e.ip ? ' ' + e.ip : '' %></td>
+        </tr>
+      <% }) %>
+      <% if (!rows.length) { %><tr><td colspan="5" class="muted">Brak zdarzeń.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+<%- include('_foot') %>

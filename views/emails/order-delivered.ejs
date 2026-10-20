@@ -1,0 +1,12 @@
+<%- include('_layout-top') %>
+<h1 style="font-size:22px;margin:0 0 12px;color:#eef0f5">Zamówienie opłacone ✓</h1>
+<p>Płatność za zamówienie <strong style="color:#c6f432"><%= order.public_id %></strong> została potwierdzona, a Twoje produkty są gotowe do odbioru.</p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0e1016;border-radius:12px;border:1px solid #232836;margin:16px 0">
+<tr><td style="padding:16px 18px;font-size:14px;line-height:1.7">
+  <% order.items.forEach(function (it) { %><%= it.quantity %> × <strong><%= it.product_name %></strong> (<%= it.variant_name %>)<br><% }) %>
+  Status: <strong style="color:#3ddc97">opłacone i zrealizowane</strong>
+</td></tr></table>
+<p><strong>Jak odebrać:</strong> kliknij przycisk poniżej, a następnie „Odbierz produkty”. Ze względów bezpieczeństwa klucze i pliki nie są wysyłane w treści e-maila.</p>
+<%- include('_button', { href: url, label: 'Odbierz produkty' }) %>
+<p style="font-size:13px;color:#9aa1b2">Strona odbioru jest dostępna do <%= util.formatDate(order.delivery_access_until) %>. Nie przekazuj tego linku innym osobom.</p>
+<%- include('_layout-bottom') %>

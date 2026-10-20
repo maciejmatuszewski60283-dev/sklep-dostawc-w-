@@ -1,0 +1,70 @@
+<%- include('../partials/head') %>
+<%
+function url(over) {
+  const p = Object.assign({ q: filters.q, kategoria: filters.category, platforma: filters.platform, od: query.od, do: query.do, dostepne: filters.inStock ? '1' : '', sort: filters.sort === 'popular' ? '' : filters.sort }, over);
+  const qs = Object.entries(p).filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => encodeURIComponent(k) + '=' + encodeURIComponent(v)).join('&');
+  return '/produkty' + (qs ? '?' + qs : '');
+}
+%>
+<div class="container page-head">
+  <nav class="breadcrumbs" aria-label="Okruszki"><a href="/">Start</a><span>/</span><a href="/produkty">Katalog</a><% if (heading !== 'Wszystkie produkty') { %><span>/</span><span><%= heading %></span><% } %></nav>
+  <h1><%= heading %></h1>
+</div>
+<div class="container catalog">
+  <aside class="filters" id="filters" aria-label="Filtry">
+    <div class="filter-group">
+      <h4>Kategorie</h4>
+      <ul class="filter-list">
+        <li><a class="<%= !filters.category ? 'active' : '' %>" href="<%= url({ kategoria: '', strona: '' }) %>">Wszystkie</a></li>
+        <% categories.forEach(function (c) { %>
+          <li><a class="<%= filters.category === c.slug ? 'active' : '' %>" href="<%= url({ kategoria: c.slug }) %>"><span><%= c.name %></span><span class="n"><%= c.product_count %></span></a></li>
+          <% c.children.forEach(function (s) { %><li class="sub"><a class="<%= filters.category === s.slug ? 'active' : '' %>" href="<%= url({ kategoria: s.slug }) %>"><span><%= s.name %></span><span class="n"><%= s.product_count %></span></a></li><% }) %>
+        <% }) %>
+      </ul>
+    </div>
+    <div class="filter-group">
+      <h4>Platforma</h4>
+      <ul class="filter-list">
+        <li><a class="<%= !filters.platform ? 'active' : '' %>" href="<%= url({ platforma: '' }) %>">Wszystkie</a></li>
+        <% platforms.forEach(function (p) { %><li><a class="<%= filters.platform === p.slug ? 'active' : '' %>" href="<%= url({ platforma: p.slug }) %>"><span><%= p.name %></span><span class="n"><%= p.product_count %></span></a></li><% }) %>
+      </ul>
+    </div>
+    <form class="filter-group" method="get" action="/produkty">
+      <h4>Cena (<%= shop.currency %>)</h4>
+      <% if (filters.q) { %><input type="hidden" name="q" value="<%= filters.q %>"><% } %>
+      <% if (filters.category) { %><input type="hidden" name="kategoria" value="<%= filters.category %>"><% } %>
+      <% if (filters.platform) { %><input type="hidden" name="platforma" value="<%= filters.platform %>"><% } %>
+      <div class="price-range">
+        <input class="input" name="od" inputmode="decimal" placeholder="od" value="<%= query.od || '' %>" aria-label="Cena od">
+        <input class="input" name="do" inputmode="decimal" placeholder="do" value="<%= query.do || '' %>" aria-label="Cena do">
+      </div>
+      <label class="check mt-12"><input type="checkbox" name="dostepne" value="1" <%= filters.inStock ? 'checked' : '' %>> Tylko dostępne</label>
+      <button class="btn btn-secondary btn-sm btn-block mt-12" type="submit">Zastosuj</button>
+    </form>
+  </aside>
+  <section>
+    <div class="toolbar">
+      <button class="btn btn-secondary btn-sm filters-toggle" type="button" data-toggle="filters"><%- include('../partials/icon', { name: 'filter' }) %>Filtry</button>
+      <span class="count"><%= result.total %> <%= result.total === 1 ? 'produkt' : 'produktów' %></span>
+      <form method="get" action="/produkty" data-autosubmit>
+        <% ['q','kategoria','platforma','od','do','dostepne'].forEach(function (k) { const v = k === 'q' ? filters.q : k === 'kategoria' ? filters.category : k === 'platforma' ? filters.platform : query[k]; if (v) { %><input type="hidden" name="<%= k %>" value="<%= v %>"><% } }) %>
+        <select class="select" name="sort" aria-label="Sortowanie">
+          <% [['popular','Polecane'],['newest','Najnowsze'],['price_asc','Cena: od najniższej'],['price_desc','Cena: od najwyższej'],['name','Nazwa A–Z']].forEach(function ([k, l]) { %>
+            <option value="<%= k %>" <%= filters.sort === k ? 'selected' : '' %>><%= l %></option>
+          <% }) %>
+        </select>
+      </form>
+    </div>
+    <% if (result.items.length) { %>
+      <div class="grid"><% result.items.forEach(function (p) { %><%- include('../partials/card', { p }) %><% }) %></div>
+      <% if (result.pages > 1) { %>
+        <nav class="pagination" aria-label="Strony">
+          <% for (let i = 1; i <= result.pages; i++) { if (i === result.page) { %><span class="current" aria-current="page"><%= i %></span><% } else if (i <= 2 || i > result.pages - 2 || Math.abs(i - result.page) <= 1) { %><a href="<%= url({ strona: i }) %>"><%= i %></a><% } else if (Math.abs(i - result.page) === 2) { %><span>…</span><% } } %>
+        </nav>
+      <% } %>
+    <% } else { %>
+      <div class="empty"><%- include('../partials/icon', { name: 'search' }) %><h3>Nic nie znaleźliśmy</h3><p>Spróbuj innej frazy albo wyczyść filtry.</p><a class="btn btn-secondary btn-sm" href="/produkty">Wyczyść filtry</a></div>
+    <% } %>
+  </section>
+</div>
+<%- include('../partials/foot') %>

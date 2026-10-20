@@ -1,0 +1,11 @@
+<%- include('../partials/head') %>
+<div class="container error-page">
+  <div class="error-code"><%= typeof code !== 'undefined' && code ? code : '!' %></div>
+  <h1><%= title %></h1>
+  <p class="muted"><%= message %></p>
+  <div class="row mt-24 center">
+    <% if (typeof action !== 'undefined' && action) { %><a class="btn btn-primary" href="<%= action.href %>"><%= action.label %></a><% } %>
+    <a class="btn btn-secondary" href="/">Strona główna</a>
+  </div>
+</div>
+<%- include('../partials/foot') %>

@@ -1,0 +1,165 @@
+<%- include('_head') %>
+<% const p = order.payment; const asset = p ? ASSETS[p.asset] : null; const csrf = csrfToken(); %>
+<div class="content-head">
+  <div><a class="muted small" href="<%= A %>/zamowienia">← Zamówienia</a><h1 class="mono"><%= order.public_id %></h1></div>
+  <%- include('_status', { s: order.status }) %>
+</div>
+
+<% if (newLink) { %>
+  <div class="flash flash-info mb-16"><div>Nowy link dla klienta (pokazany jednorazowo):<div class="copy mt-8"><code><%= newLink %></code><button type="button" data-copy="<%= newLink %>">Kopiuj</button></div></div></div>
+<% } %>
+
+<div class="form-layout">
+  <div class="stack">
+    <section class="panel">
+      <h2 class="section-title">Pozycje</h2>
+      <div class="table-wrap">
+        <table class="t">
+          <thead><tr><th>Produkt</th><th>Ilość</th><th>Cena</th><th>Dostawa</th></tr></thead>
+          <tbody>
+          <% order.items.forEach(function (it, i) { %>
+            <tr>
+              <td><strong><%= it.product_name %></strong><div class="muted small"><%= it.variant_name %></div></td>
+              <td><%= it.quantity %></td>
+              <td><%= fmt(it.unit_price_minor * it.quantity) %></td>
+              <td>
+                <% if (it.delivery_type === 'keys') { %>Klucze: <%= stockCounts[i] %>/<%= it.quantity %> przypisane<% } %>
+                <% if (it.delivery_type === 'file') { %>Plik<% } %>
+                <% if (it.delivery_type === 'manual') { %><%= it.manual_delivery_enc ? 'Ręczna — wprowadzona' : 'Ręczna — oczekuje' %><% } %>
+              </td>
+            </tr>
+          <% }) %>
+          </tbody>
+        </table>
+      </div>
+      <div class="summary-row mt-12"><span>Suma</span><span><%= fmt(order.subtotal_minor) %></span></div>
+      <% if (order.discount_minor) { %><div class="summary-row text-ok"><span>Rabat <%= order.discount_code %></span><span>−<%= fmt(order.discount_minor) %></span></div><% } %>
+      <div class="summary-row total"><span>Razem</span><b><%= fmt(order.total_minor) %></b></div>
+    </section>
+
+    <% const manualItems = order.items.filter(i => i.delivery_type === 'manual'); %>
+    <% if (manualItems.length && ['paid', 'awaiting_stock'].includes(order.status) && can('orders.manage')) { %>
+    <section class="panel">
+      <h2 class="section-title">Ręczna realizacja</h2>
+      <p class="section-desc">Wpisz treść, którą klient zobaczy na stronie zamówienia (np. kod). Jest szyfrowana i nie trafia do e-maila.</p>
+      <% manualItems.forEach(function (it) { %>
+        <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/reczna-dostawa" class="mb-16">
+          <input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="item_id" value="<%= it.id %>">
+          <label class="label"><%= it.product_name %> — <%= it.variant_name %> × <%= it.quantity %></label>
+          <textarea class="textarea mono" name="content" rows="3" required maxlength="5000"></textarea>
+          <button class="btn btn-primary btn-sm mt-8" type="submit">Zapisz i zrealizuj</button>
+        </form>
+      <% }) %>
+    </section>
+    <% } %>
+
+    <section class="panel">
+      <h2 class="section-title">Płatność</h2>
+      <% if (!p) { %><p class="muted">Brak płatności.</p><% } else { %>
+        <dl class="kv">
+          <dt>Waluta / sieć</dt><dd><%= asset.symbol %> · <%= asset.network %> (<%= p.provider === 'direct' ? 'własna bramka' : 'NOWPayments' %>)</dd>
+          <dt>Status</dt><dd><%- include('_status', { s: p.status }) %><% if (p.late) { %> <span class="pill warn">po terminie</span><% } %><% if (p.overpaid) { %> <span class="pill info">nadpłata</span><% } %><% if (p.provider_status) { %> <span class="muted small">(procesor: <%= p.provider_status %>)</span><% } %></dd>
+          <dt>Kwota wymagana</dt><dd class="mono"><%= atomicToDecimal(p.amount_atomic, p.decimals) %> <%= asset.symbol %></dd>
+          <dt>Otrzymano</dt><dd class="mono"><%= atomicToDecimal(p.received_atomic, p.decimals) %> <%= asset.symbol %></dd>
+          <dt>Adres</dt><dd class="mono"><%= p.address %><% if (p.address_index != null) { %> <span class="muted">(indeks <%= p.address_index %>)</span><% } %></dd>
+          <dt>Kurs</dt><dd>1 <%= asset.symbol %> = <%= p.rate %> <%= order.currency %></dd>
+          <dt>Termin</dt><dd><%= util.formatDate(p.expires_at) %> · obserwacja do <%= util.formatDate(p.watch_until) %></dd>
+          <dt>Potwierdzenia</dt><dd>wymagane: <%= p.required_confirmations %></dd>
+          <% if (p.provider_payment_id) { %><dt>ID procesora</dt><dd class="mono"><%= p.provider_payment_id %></dd><% } %>
+        </dl>
+        <% if (p.txs.length) { %>
+          <h3 class="section-title mt-16">Transakcje</h3>
+          <% p.txs.forEach(function (t) { %>
+            <div class="summary-row"><a class="mono link" href="<%= asset.explorerTx + t.txid %>" target="_blank" rel="noopener noreferrer"><%= t.txid.slice(0, 18) %>…</a><span><%= atomicToDecimal(t.amount_atomic, p.decimals) %> <%= asset.symbol %> · <%= t.confirmations > 1e6 ? 'potwierdzona' : t.confirmations + ' potw.' %> <% if (t.source === 'manual') { %><span class="pill info">ręcznie</span><% } %></span></div>
+          <% }) %>
+        <% } %>
+        <% if (claims.length) { %>
+          <h3 class="section-title mt-16">Zgłoszenia klienta</h3>
+          <% claims.forEach(function (c) { %><div class="summary-row"><span class="mono small"><%= c.txid %></span><%- include('_status', { s: c.status }) %></div><% }) %>
+          <p class="hint">Przypisz wpływ w sekcji <a class="link" href="<%= A %>/platnosci">Płatności</a>.</p>
+        <% } %>
+      <% } %>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">E-maile</h2>
+      <div class="table-wrap">
+        <table class="t">
+          <thead><tr><th>Typ</th><th>Temat</th><th>Status</th><th>Data</th><th></th></tr></thead>
+          <tbody>
+            <% emails.forEach(function (e) { %>
+              <tr>
+                <td class="small"><%= e.kind %></td><td class="small"><%= e.subject %><% if (e.last_error) { %><div class="error-text small"><%= e.last_error %></div><% } %></td>
+                <td><%- include('_status', { s: e.status }) %></td><td class="muted small"><%= util.formatDate(e.sent_at || e.created_at) %></td>
+                <td class="actions"><% if (e.status === 'failed') { %><form method="post" action="<%= A %>/dostawy/email/<%= e.id %>/ponow"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="back" value="order"><input type="hidden" name="order_id" value="<%= order.id %>"><button class="btn btn-secondary btn-sm" type="submit">Ponów</button></form><% } %></td>
+              </tr>
+            <% }) %>
+            <% if (!emails.length) { %><tr><td colspan="5" class="muted">Brak wiadomości.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Historia</h2>
+      <% deliveries.forEach(function (d) { %><div class="summary-row"><span><%- include('_status', { s: d.status }) %> <span class="small"><%= d.detail %></span></span><span class="muted small"><%= util.formatDate(d.created_at) %></span></div><% }) %>
+      <% evts.forEach(function (e) { %><div class="summary-row"><span class="small"><%= e.message %></span><span class="muted small"><%= util.formatDate(e.ts) %></span></div><% }) %>
+    </section>
+  </div>
+
+  <div class="stack">
+    <section class="panel">
+      <h2 class="section-title">Klient</h2>
+      <dl class="kv">
+        <dt>E-mail</dt><dd><a class="link" href="mailto:<%= order.email %>"><%= order.email %></a></dd>
+        <dt>Złożone</dt><dd><%= util.formatDate(order.created_at) %></dd>
+        <dt>Opłacone</dt><dd><%= util.formatDate(order.paid_at) %></dd>
+        <dt>Zrealizowane</dt><dd><%= util.formatDate(order.fulfilled_at) %></dd>
+        <dt>Dostęp do</dt><dd><%= util.formatDate(order.delivery_access_until) %></dd>
+        <dt>Zgody</dt><dd class="small">regulamin i rezygnacja z odstąpienia: <%= util.formatDate(order.withdrawal_consent_at) %></dd>
+      </dl>
+    </section>
+
+    <section class="panel">
+      <h2 class="section-title">Akcje</h2>
+      <div class="stack">
+        <% if (['paid', 'awaiting_stock'].includes(order.status) && can('orders.manage')) { %>
+          <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/realizuj"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-primary btn-block" type="submit">Ponów realizację</button></form>
+        <% } %>
+        <% if (order.status === 'fulfilled') { %>
+          <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/wyslij-ponownie"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-secondary btn-block" type="submit">Wyślij ponownie e-mail z produktami</button></form>
+          <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/przedluz" class="row"><input type="hidden" name="_csrf" value="<%= csrf %>"><input class="input" name="days" value="7" inputmode="numeric" aria-label="Dni"><button class="btn btn-secondary btn-sm" type="submit">Przedłuż dostęp (dni)</button></form>
+        <% } %>
+        <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/nowy-link" data-confirm="Poprzednie linki klienta przestaną działać. Kontynuować?"><input type="hidden" name="_csrf" value="<%= csrf %>"><input type="hidden" name="send" value="1"><button class="btn btn-secondary btn-block" type="submit">Wyślij klientowi nowy link</button></form>
+        <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/nowy-link" data-confirm="Poprzednie linki klienta przestaną działać. Kontynuować?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-ghost btn-block" type="submit">Pokaż nowy link (do wysłania ręcznie)</button></form>
+        <% if (['awaiting_payment', 'expired', 'underpaid'].includes(order.status) && can('orders.manage')) { %>
+          <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/anuluj" data-confirm="Anulować zamówienie?"><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-danger btn-block" type="submit">Anuluj zamówienie</button></form>
+        <% } %>
+      </div>
+    </section>
+
+    <% if (!['refunded', 'cancelled'].includes(order.status) && can('orders.manage') && p && BigInt(p.received_atomic) > 0n) { %>
+    <section class="panel">
+      <h2 class="section-title">Zwrot</h2>
+      <p class="section-desc">Zwrot wysyłasz ręcznie ze swojego portfela (na adres podany przez klienta), a tutaj go odnotowujesz.</p>
+      <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/zwrot" data-confirm="Oznaczyć zamówienie jako zwrócone?">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <div class="field"><label class="label">Hash transakcji zwrotu</label><input class="input mono" name="refund_tx" maxlength="120"></div>
+        <div class="field"><label class="label">Notatka</label><textarea class="textarea" name="refund_note" rows="2" maxlength="1000"></textarea></div>
+        <label class="check mt-12"><input type="checkbox" name="restock" value="1"> Przywróć klucze do magazynu (tylko jeśli klient ich nie wyświetlił)</label>
+        <button class="btn btn-danger btn-block mt-12" type="submit">Oznacz jako zwrócone</button>
+      </form>
+    </section>
+    <% } %>
+
+    <section class="panel">
+      <h2 class="section-title">Notatka wewnętrzna</h2>
+      <form method="post" action="<%= A %>/zamowienia/<%= order.id %>/notatka">
+        <input type="hidden" name="_csrf" value="<%= csrf %>">
+        <textarea class="textarea" name="admin_note" rows="3" maxlength="5000"><%= order.admin_note %></textarea>
+        <button class="btn btn-secondary btn-sm mt-8" type="submit">Zapisz notatkę</button>
+      </form>
+    </section>
+  </div>
+</div>
+<%- include('_foot') %>

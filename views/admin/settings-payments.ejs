@@ -1,0 +1,123 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>Płatności kryptowalutami</h1></div>
+
+<div class="help mb-16">
+  <strong>Jak to działa?</strong> Sklep ma własną bramkę płatności: pieniądze trafiają <strong>prosto do Twojego portfela</strong>, a sklep zna wyłącznie dane publiczne (adres lub klucz publiczny xpub). Nikt — nawet po włamaniu na serwer — nie wyda Twoich środków.
+  <ol>
+    <li>Wybierz sieć poniżej, wklej dane z portfela i kliknij <strong>Zapisz i przetestuj</strong>.</li>
+    <li>Porównaj pokazane adresy z adresami w swoim portfelu (dla BTC/LTC muszą być identyczne jak pierwsze adresy odbiorcze).</li>
+    <li>Kliknij <strong>Włącz</strong> — dopiero wtedy klienci zobaczą tę walutę w kasie.</li>
+    <li>Zrób próbny zakup za niewielką kwotę, zanim zaczniesz sprzedawać.</li>
+  </ol>
+  Używaj portfela, do którego masz frazę odzyskiwania (np. Electrum, Sparrow, Trezor, Ledger, Trust Wallet, MetaMask). <strong>Nie używaj adresów giełdy</strong> — giełdy mogą nie zaksięgować wpłat i zmieniać adresy.
+</div>
+
+<% if (report) { %>
+  <div class="flash <%= report.ok ? 'flash-success' : 'flash-error' %> mb-16">
+    <div>
+      <strong><%= report.code %>: <%= report.ok ? 'test zakończony powodzeniem' : 'test nie powiódł się' %></strong>
+      <ul class="mb-0"><% report.lines.forEach(function (l) { %><li><%= l %></li><% }) %></ul>
+      <% if (report.addresses.length) { %><p class="mb-0 mt-8">Adresy:</p><% report.addresses.forEach(function (a, i) { %><div class="mono small"><%= report.addresses.length > 1 ? `#${i}: ` : '' %><%= a %></div><% }) %><% } %>
+      <% if (report.ok) { %><p class="mb-0 mt-8">Jeśli wszystko się zgadza, kliknij <strong>Włącz</strong> przy tej sieci.</p><% } %>
+    </div>
+  </div>
+<% } %>
+
+<div class="stack">
+<% assets.forEach(function ({ asset, cfg, ready, needsTest }) { %>
+  <details class="panel asset-card" id="<%= asset.code %>" <%= report && report.code === asset.code ? 'open' : '' %>>
+    <summary>
+      <span class="coin-ic <%= asset.icon %>"><%= asset.symbol.slice(0, 4) %></span>
+      <span><strong><%= asset.symbol %></strong> <span class="muted">· <%= asset.network %></span></span>
+      <span class="spacer"></span>
+      <% if (ready) { %><span class="pill ok">Włączona</span><% } else if (cfg.verifiedAt && !needsTest) { %><span class="pill info">Przetestowana — wyłączona</span><% } else if (needsTest) { %><span class="pill warn">Wymaga ponownego testu</span><% } else { %><span class="pill muted">Nieskonfigurowana</span><% } %>
+    </summary>
+    <form method="post" action="<%= A %>/ustawienia/platnosci/<%= asset.code %>" class="mt-16" data-provider-form>
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <% if (asset.testnet) { %><div class="flash flash-warn mb-16">Sieć testowa do sprawdzenia całego procesu bez prawdziwych pieniędzy. Testowe monety pobierzesz z „faucetu” (np. mempool.space/testnet4/faucet). Nie da się jej włączyć w trybie produkcyjnym.</div><% } %>
+      <div class="form-grid">
+        <% if (!asset.directOnly) { %>
+        <div class="field full"><label class="label">Sposób obsługi</label>
+          <select class="select" name="provider">
+            <option value="direct" <%= cfg.provider === 'direct' ? 'selected' : '' %>>Własna bramka — środki prosto do mojego portfela (bez prowizji)</option>
+            <option value="nowpayments" <%= cfg.provider === 'nowpayments' ? 'selected' : '' %>>NOWPayments — procesor zewnętrzny (prowizja ok. 0,5%)</option>
+          </select>
+        </div>
+        <% } %>
+
+        <% if (asset.kind === 'utxo') { %>
+          <div class="field full" data-provider="direct">
+            <label class="label">Klucz publiczny portfela (xpub / zpub / ypub<%= asset.code === 'LTC' ? ' / Ltub / Mtub' : asset.testnet ? ' / tpub / vpub' : '' %>)</label>
+            <input class="input mono" name="xpub" value="<%= cfg.xpub %>" maxlength="200" spellcheck="false" autocomplete="off">
+            <span class="hint">Electrum: Portfel → Informacje → Klucz publiczny. Sparrow: Settings → Keystore → xpub. Ledger/Trezor: w Sparrow lub Electrum podłącz urządzenie i skopiuj klucz. <strong>Nigdy nie wklejaj frazy odzyskiwania ani klucza prywatnego (xprv).</strong> Najlepiej utwórz osobne konto/portfel tylko dla sklepu.</span>
+          </div>
+          <div class="field" data-provider="direct"><label class="label">Typ adresów</label>
+            <select class="select" name="scriptType">
+              <% [['auto','Automatycznie (z prefiksu klucza)'],['p2wpkh','Native SegWit (bc1… / ltc1…)'],['p2sh-p2wpkh','SegWit zagnieżdżony (3… / M…)'],['p2pkh','Legacy (1… / L…)']].forEach(function ([k, l]) { %><option value="<%= k %>" <%= cfg.scriptType === k ? 'selected' : '' %>><%= l %></option><% }) %>
+            </select>
+            <span class="hint">Dla klucza „xpub” wybierz typ zgodny z portfelem (zwykle Native SegWit).</span>
+          </div>
+          <div class="field" data-provider="direct"><label class="label">API blockchaina (Esplora)</label><input class="input mono" name="apiBase" value="<%= cfg.apiBase %>" maxlength="300"><span class="hint">Domyślnie publiczne <%= asset.apiBase %>. Możesz wskazać własny serwer mempool/electrs.</span></div>
+          <div class="field full help" data-provider="direct">Portfele domyślnie sprawdzają tylko ok. 20 kolejnych nieużytych adresów. Jeśli wiele zamówień wygasa bez płatności, zwiększ w portfelu „gap limit” (Electrum: konsola <code>wallet.change_gap_limit(200)</code>; Sparrow: Settings → Advanced → Gap limit). Sklep sam ponownie wykorzystuje adresy z wygasłych, nieopłaconych zamówień.</div>
+        <% } else { %>
+          <div class="field full" data-provider="direct">
+            <label class="label">Adres odbiorczy w sieci <%= asset.network %></label>
+            <input class="input mono" name="address" value="<%= cfg.address %>" maxlength="100" spellcheck="false" autocomplete="off" placeholder="<%= asset.kind === 'tron-token' ? 'T…' : '0x…' %>">
+            <span class="hint">Każde zamówienie dostaje unikalną końcówkę kwoty, dzięki której system rozpoznaje płatność na wspólnym adresie.<% if (asset.kind === 'tron-token') { %> Do odbioru USDT na Tron nie potrzebujesz TRX, ale do jego dalszej wysyłki — tak.<% } else if (asset.kind === 'evm-token') { %> Do przesłania tokenów dalej potrzebujesz trochę natywnej waluty sieci na opłaty.<% } %></span>
+          </div>
+          <% if (asset.kind === 'tron-token') { %>
+            <div class="field" data-provider="direct"><label class="label">API TronGrid</label><input class="input mono" name="apiBase" value="<%= cfg.apiBase %>" maxlength="300"></div>
+          <% } else { %>
+            <div class="field" data-provider="direct"><label class="label">Węzeł RPC</label><input class="input mono" name="rpc" value="<%= cfg.rpc %>" maxlength="300"><span class="hint">Domyślnie publiczny węzeł. Dla większego ruchu użyj własnego (np. Alchemy, Infura, QuickNode).</span></div>
+          <% } %>
+        <% } %>
+
+        <div class="field" data-provider="direct"><label class="label">Wymagane potwierdzenia</label><input class="input" name="confirmations" inputmode="numeric" value="<%= cfg.confirmations %>"><span class="hint">Domyślnie <%= asset.defaultConfirmations %>. Więcej = bezpieczniej, ale dłużej.</span></div>
+
+        <% if (!asset.directOnly) { %>
+        <div class="field full help" data-provider="nowpayments">Adres i kwotę wygeneruje NOWPayments, a środki trafią na portfel ustawiony w panelu NOWPayments. Najpierw uzupełnij klucz API i IPN secret w sekcji „Klucze API” poniżej i włącz walutę <code><%= asset.nowpayments %></code> na swoim koncie NOWPayments.</div>
+        <% } %>
+      </div>
+      <div class="row mt-16">
+        <button class="btn btn-primary" type="submit" name="action" value="test">Zapisz i przetestuj</button>
+        <% if (cfg.enabled) { %>
+          <button class="btn btn-danger" type="submit" name="action" value="disable">Wyłącz</button>
+        <% } else if (cfg.verifiedAt && !needsTest) { %>
+          <button class="btn btn-secondary" type="submit" name="action" value="enable" <%= asset.testnet && isProd ? 'disabled' : '' %>>Włącz</button>
+        <% } %>
+        <% if (cfg.verifiedAt) { %><span class="muted small">Ostatni udany test: <%= util.formatDate(cfg.verifiedAt.replace('T', ' ').slice(0, 19)) %></span><% } %>
+      </div>
+    </form>
+  </details>
+<% }) %>
+</div>
+
+<section class="panel mt-24">
+  <h2 class="section-title">Klucze API</h2>
+  <p class="section-desc">Klucze są szyfrowane w bazie i nigdy nie trafiają do przeglądarki klientów. Wpisz nową wartość, aby zmienić zapisaną.</p>
+  <form method="post" action="<%= A %>/ustawienia/platnosci/klucze" autocomplete="off">
+    <input type="hidden" name="_csrf" value="<%= csrf %>">
+    <div class="form-grid">
+      <% [['payments.etherscan_api_key', 'Etherscan API key (wymagany tylko dla ETH)', 'Darmowy klucz: etherscan.io → API Keys'],
+          ['payments.trongrid_api_key', 'TronGrid API key (opcjonalny, zalecany)', 'Darmowy klucz: trongrid.io — zwiększa limity zapytań'],
+          ['payments.nowpayments.api_key', 'NOWPayments API key', 'nowpayments.io → Settings → Payments → API keys'],
+          ['payments.nowpayments.ipn_secret', 'NOWPayments IPN secret', 'nowpayments.io → Settings → Payments → Instant payment notifications']].forEach(function ([k, l, h]) { %>
+        <div class="field">
+          <label class="label"><%= l %> <% if (s.isSecretSet(k)) { %><span class="pill ok">zapisany</span><% } %></label>
+          <input class="input mono" type="password" name="<%= k %>" maxlength="300" autocomplete="new-password" placeholder="<%= s.isSecretSet(k) ? '••••••••' : '' %>">
+          <span class="hint"><%= h %><% if (s.isSecretSet(k)) { %> · <label class="check"><input type="checkbox" name="clear_<%= k %>" value="1"> usuń</label><% } %></span>
+        </div>
+      <% }) %>
+      <label class="check"><input type="checkbox" name="payments.nowpayments.sandbox" value="1" <%= s.getBool('payments.nowpayments.sandbox') ? 'checked' : '' %>> NOWPayments w trybie testowym (sandbox)</label>
+      <div class="field full"><span class="label">Adres powiadomień IPN (wklej w panelu NOWPayments)</span><div class="copy"><code><%= webhookUrl %></code><button type="button" data-copy="<%= webhookUrl %>">Kopiuj</button></div><span class="hint">Działa dopiero, gdy sklep jest dostępny pod publicznym adresem https.</span></div>
+    </div>
+    <button class="btn btn-primary mt-16" type="submit">Zapisz klucze</button>
+  </form>
+</section>
+
+<section class="panel mt-16">
+  <h2 class="section-title">Zwroty płatności</h2>
+  <p class="section-desc mb-0">Transakcje blockchain są nieodwracalne, dlatego zwroty wykonujesz ręcznie ze swojego portfela na adres podany przez klienta (nie na adres, z którego przyszła płatność — mógł to być adres giełdy). Potem odnotuj zwrot w szczegółach zamówienia. Zasady zwrotów opisuje regulamin (§6, §10).</p>
+</section>
+<%- include('_foot') %>

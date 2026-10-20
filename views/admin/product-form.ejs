@@ -1,0 +1,150 @@
+<%- include('_head') %>
+<%
+const f = form || product || {};
+const val = (k, d = '') => (f[k] !== undefined && f[k] !== null ? f[k] : d);
+const checked = (k, def = false) => (form ? (form[k] === '1' || form[k] === 'on') : product ? Boolean(product[k]) : def) ? 'checked' : '';
+const vlist = form ? form.variants : variants.map(v => ({ id: v.id, name: v.name, price: money.minorToInput(v.price_minor), compare: money.minorToInput(v.compare_at_minor), stock: v.manual_stock == null ? '' : String(v.manual_stock), active: v.active ? '1' : '', keys: v.stock }));
+const rows = vlist.length ? vlist : [{ name: 'Standard', price: '', compare: '', stock: '', active: '1' }];
+const action = product ? `${A}/produkty/${product.id}` : `${A}/produkty/nowy`;
+%>
+<div class="content-head">
+  <div><a class="muted small" href="<%= A %>/produkty">← Produkty</a><h1><%= product ? product.name : 'Dodaj produkt' %></h1></div>
+  <% if (product && product.active) { %><a class="btn btn-secondary btn-sm" href="/produkt/<%= product.slug %>" target="_blank" rel="noopener">Zobacz w sklepie ↗</a><% } %>
+</div>
+
+<% if (errors.length) { %><div class="flash flash-error mb-16"><div><strong>Popraw formularz:</strong><ul class="mb-0"><% errors.forEach(function (e) { %><li><%= e %></li><% }) %></ul></div></div><% } %>
+
+<form method="post" action="<%= action %>?_csrf=<%= csrfToken() %>" enctype="multipart/form-data">
+  <input type="hidden" name="_csrf" value="<%= csrfToken() %>">
+  <div class="form-layout">
+    <div class="stack">
+      <section class="panel">
+        <h2 class="section-title">Podstawowe informacje</h2>
+        <p class="section-desc">Nazwa i opis widoczne w sklepie. Opis możesz formatować: **pogrubienie**, listy zaczynające się od „- ”, nagłówki „## ”.</p>
+        <div class="form-grid">
+          <div class="field full"><label class="label" for="name">Nazwa produktu *</label><input class="input" id="name" name="name" required maxlength="160" value="<%= val('name') %>" placeholder="np. Minecraft Java & Bedrock Edition"></div>
+          <div class="field full"><label class="label" for="short">Krótki opis (na kartach produktów)</label><input class="input" id="short" name="short_description" maxlength="300" value="<%= val('short_description') %>" placeholder="Jedno zdanie zachęty"></div>
+          <div class="field full"><label class="label" for="desc">Pełny opis</label><textarea class="textarea" id="desc" name="description_md" rows="8" maxlength="20000"><%= val('description_md') %></textarea></div>
+          <div class="field"><label class="label" for="cat">Kategoria</label>
+            <select class="select" id="cat" name="category_id"><option value="">— brak —</option>
+              <% categories.filter(c => !c.parent_id).forEach(function (c) { %>
+                <option value="<%= c.id %>" <%= String(val('category_id')) === String(c.id) ? 'selected' : '' %>><%= c.name %></option>
+                <% categories.filter(s => s.parent_id === c.id).forEach(function (s) { %><option value="<%= s.id %>" <%= String(val('category_id')) === String(s.id) ? 'selected' : '' %>>— <%= s.name %></option><% }) %>
+              <% }) %>
+            </select>
+          </div>
+          <div class="field"><label class="label" for="pl">Platforma</label>
+            <select class="select" id="pl" name="platform_id"><option value="">— brak —</option>
+              <% platforms.forEach(function (p) { %><option value="<%= p.id %>" <%= String(val('platform_id')) === String(p.id) ? 'selected' : '' %>><%= p.name %></option><% }) %>
+            </select>
+          </div>
+          <div class="field"><label class="label" for="region">Region</label><input class="input" id="region" name="region" maxlength="80" value="<%= val('region') %>" placeholder="np. Global, EU, PL"></div>
+          <div class="field"><label class="label" for="slug">Adres w sklepie (opcjonalnie)</label><input class="input" id="slug" name="slug" maxlength="80" value="<%= product ? product.slug : '' %>" placeholder="tworzony automatycznie z nazwy"></div>
+        </div>
+      </section>
+
+      <section class="panel" id="warianty">
+        <h2 class="section-title">Warianty i ceny</h2>
+        <p class="section-desc">Każdy produkt ma co najmniej jeden wariant (np. „Standard”, „50 zł”, „1 miesiąc”). Ceny w <%= shop.currency %>. „Cena przed obniżką” pokaże przekreśloną cenę i — zgodnie z prawem — najniższą cenę z 30 dni.</p>
+        <div data-variants data-next="<%= rows.length %>">
+          <% rows.forEach(function (v, i) { %>
+            <div class="vrow">
+              <input type="hidden" name="v_<%= i %>_id" value="<%= v.id || '' %>">
+              <div class="field"><label class="label">Nazwa wariantu</label><input class="input" name="v_<%= i %>_name" value="<%= v.name %>" maxlength="120" required></div>
+              <div class="field"><label class="label">Cena *</label><input class="input" name="v_<%= i %>_price" value="<%= v.price %>" inputmode="decimal" placeholder="0,00" required></div>
+              <div class="field"><label class="label">Cena przed obniżką</label><input class="input" name="v_<%= i %>_compare" value="<%= v.compare %>" inputmode="decimal" placeholder="opcjonalnie"></div>
+              <div class="field" data-for-delivery="file manual"><label class="label">Stan (puste = bez limitu)</label><input class="input" name="v_<%= i %>_stock" value="<%= v.stock %>" inputmode="numeric"></div>
+              <div class="field" data-for-delivery="keys"><label class="label">Klucze w magazynie</label><div class="input"><%= v.keys != null ? v.keys : 0 %><% if (v.id) { %> · <a class="link" href="<%= A %>/magazyn/<%= v.id %>">dodaj</a><% } %></div></div>
+              <label class="check"><input type="checkbox" name="v_<%= i %>_active" value="1" <%= v.active === '1' || v.active === 'on' || v.active === 1 ? 'checked' : '' %>> Aktywny</label>
+              <button class="btn btn-ghost btn-sm" type="button" data-remove-variant title="Usuń wariant">✕</button>
+            </div>
+          <% }) %>
+        </div>
+        <button class="btn btn-secondary btn-sm mt-12" type="button" data-add-variant>+ Dodaj wariant</button>
+        <template id="variant-template">
+          <div class="vrow">
+            <input type="hidden" name="v___i___id" value="">
+            <div class="field"><label class="label">Nazwa wariantu</label><input class="input" name="v___i___name" maxlength="120" required></div>
+            <div class="field"><label class="label">Cena *</label><input class="input" name="v___i___price" inputmode="decimal" placeholder="0,00" required></div>
+            <div class="field"><label class="label">Cena przed obniżką</label><input class="input" name="v___i___compare" inputmode="decimal" placeholder="opcjonalnie"></div>
+            <div class="field" data-for-delivery="file manual"><label class="label">Stan (puste = bez limitu)</label><input class="input" name="v___i___stock" inputmode="numeric"></div>
+            <div class="field" data-for-delivery="keys"><label class="label">Klucze w magazynie</label><div class="input muted">po zapisaniu</div></div>
+            <label class="check"><input type="checkbox" name="v___i___active" value="1" checked> Aktywny</label>
+            <button class="btn btn-ghost btn-sm" type="button" data-remove-variant title="Usuń wariant">✕</button>
+          </div>
+        </template>
+      </section>
+
+      <section class="panel">
+        <h2 class="section-title">Automatyczna dostawa</h2>
+        <p class="section-desc">Co klient otrzyma po opłaceniu zamówienia.</p>
+        <div class="field">
+          <label class="label" for="dt">Sposób dostawy</label>
+          <select class="select" id="dt" name="delivery_type">
+            <option value="keys" <%= val('delivery_type', 'keys') === 'keys' ? 'selected' : '' %>>Klucze / kody z magazynu (każdy klient dostaje unikalny kod)</option>
+            <option value="file" <%= val('delivery_type') === 'file' ? 'selected' : '' %>>Plik do pobrania (ten sam plik dla każdego klienta)</option>
+            <option value="manual" <%= val('delivery_type') === 'manual' ? 'selected' : '' %>>Realizacja ręczna (wpiszesz treść dla klienta w zamówieniu)</option>
+          </select>
+        </div>
+        <div class="help mt-12" data-for-delivery="keys">Po zapisaniu produktu dodasz klucze w sekcji <strong>Magazyn kluczy</strong> (jeden klucz w linii). Klucze są szyfrowane w bazie, a klient zobaczy je tylko na zabezpieczonej stronie zamówienia.</div>
+        <div class="field mt-12" data-for-delivery="file">
+          <label class="label">Plik dla klienta (max <%= maxFileMb %> MB)</label>
+          <% if (deliveryFile) { %><p class="small">Obecny plik: <strong><%= deliveryFile.original_name %></strong> (<%= (deliveryFile.size / 1024 / 1024).toFixed(2) %> MB). Wgraj nowy, aby go zastąpić.</p><% } %>
+          <label class="dropzone"><input type="file" name="delivery_file"><strong>Kliknij lub upuść plik</strong><span>Plik nie jest publiczny — klient pobiera go jednorazowym linkiem.</span></label>
+          <div class="previews"></div>
+        </div>
+        <div class="field mt-12"><label class="label" for="dinfo">Informacje o dostawie (widoczne na stronie produktu)</label><textarea class="textarea" id="dinfo" name="delivery_info_md" rows="3" maxlength="5000" placeholder="np. Kod aktywujesz w aplikacji Steam → Aktywuj produkt."><%= val('delivery_info_md') %></textarea></div>
+        <div class="field"><label class="label" for="req">Wymagania i ograniczenia</label><textarea class="textarea" id="req" name="requirements_md" rows="3" maxlength="5000" placeholder="np. Wymaga konta Steam. Działa tylko w regionie EU."><%= val('requirements_md') %></textarea></div>
+      </section>
+    </div>
+
+    <div class="stack">
+      <section class="panel">
+        <h2 class="section-title">Publikacja</h2>
+        <label class="check"><input type="checkbox" name="rights_confirmed" value="1" <%= checked('rights_confirmed') %>> <span>Oświadczam, że mam prawo do dystrybucji tego produktu (np. jestem autoryzowanym sprzedawcą). <strong>Nie sprzedawaj kont ani danych logowania do cudzych usług.</strong></span></label>
+        <label class="check mt-12"><input type="checkbox" name="active" value="1" <%= checked('active') %>> Opublikowany (widoczny w sklepie)</label>
+        <label class="check mt-12"><input type="checkbox" name="featured" value="1" <%= checked('featured') %>> Polecany na stronie głównej</label>
+        <div class="field mt-12"><label class="label" for="sort">Kolejność (mniejsza = wyżej)</label><input class="input" id="sort" name="sort" inputmode="numeric" value="<%= val('sort', 0) %>"></div>
+        <button class="btn btn-primary btn-block mt-16" type="submit"><%= product ? 'Zapisz zmiany' : 'Dodaj produkt' %></button>
+      </section>
+
+      <section class="panel" id="zdjecia">
+        <h2 class="section-title">Zdjęcia</h2>
+        <p class="section-desc">Pierwsze zdjęcie jest główne. JPG/PNG/WebP do 10 MB — zostaną automatycznie zoptymalizowane, a metadane (np. lokalizacja GPS) usunięte.</p>
+        <% if (images.length) { %>
+          <div class="imgs mb-16">
+            <% images.forEach(function (img, i) { %>
+              <div class="img-tile">
+                <img src="/media/<%= img.thumb %>" alt="">
+                <% if (i === 0) { %><span class="pill ok main-flag">Główne</span><% } %>
+                <div class="bar">
+                  <% if (i > 0) { %><button class="btn btn-secondary btn-sm" type="submit" form="img-main-<%= img.id %>">Główne</button><% } %>
+                  <button class="btn btn-danger btn-sm" type="submit" form="img-del-<%= img.id %>">Usuń</button>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+        <label class="dropzone"><input type="file" name="images" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" multiple><strong>Dodaj zdjęcia</strong><span>Kliknij lub przeciągnij pliki (max 10)</span></label>
+        <div class="previews"></div>
+      </section>
+
+      <% if (product) { %>
+      <section class="panel">
+        <h2 class="section-title">Usuń produkt</h2>
+        <p class="section-desc">Produkt zniknie ze sklepu. Historia zamówień zostanie zachowana, niesprzedane klucze zostaną wycofane.</p>
+        <button class="btn btn-danger btn-block" type="submit" form="product-delete">Usuń produkt</button>
+      </section>
+      <% } %>
+    </div>
+  </div>
+</form>
+
+<% if (product) { %>
+  <% images.forEach(function (img) { %>
+    <form id="img-main-<%= img.id %>" method="post" action="<%= A %>/produkty/<%= product.id %>/zdjecia/<%= img.id %>/glowne"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"></form>
+    <form id="img-del-<%= img.id %>" method="post" action="<%= A %>/produkty/<%= product.id %>/zdjecia/<%= img.id %>/usun" data-confirm="Usunąć to zdjęcie?"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"></form>
+  <% }) %>
+  <form id="product-delete" method="post" action="<%= A %>/produkty/<%= product.id %>/usun" data-confirm="Na pewno usunąć produkt „<%= product.name %>”?"><input type="hidden" name="_csrf" value="<%= csrfToken() %>"></form>
+<% } %>
+<%- include('_foot') %>

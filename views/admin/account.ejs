@@ -1,0 +1,28 @@
+<%- include('_head') %>
+<% const csrf = csrfToken(); %>
+<div class="content-head"><h1>Moje konto</h1></div>
+<div class="grid-2">
+  <section class="panel">
+    <h2 class="section-title">Zmiana hasła</h2>
+    <p class="section-desc">Po zmianie zostaniesz wylogowany ze wszystkich urządzeń.</p>
+    <form method="post" action="<%= A %>/konto/haslo">
+      <input type="hidden" name="_csrf" value="<%= csrf %>">
+      <div class="field"><label class="label">Obecne hasło</label><input class="input" type="password" name="current" required autocomplete="current-password"></div>
+      <div class="field"><label class="label">Nowe hasło (min. 12 znaków)</label><input class="input" type="password" name="password" required minlength="12" autocomplete="new-password"></div>
+      <div class="field"><label class="label">Powtórz nowe hasło</label><input class="input" type="password" name="password2" required minlength="12" autocomplete="new-password"></div>
+      <button class="btn btn-primary mt-16" type="submit">Zmień hasło</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2 class="section-title">Kody odzyskiwania 2FA</h2>
+    <p class="section-desc">Pozostało kodów: <strong><%= recoveryLeft %></strong>. Wygenerowanie nowych unieważnia stare.</p>
+    <% if (codes) { %>
+      <div class="flash flash-warn mb-16">Zapisz nowe kody teraz — nie zobaczysz ich ponownie.</div>
+      <div class="codes mb-16"><% codes.forEach(function (c) { %><span><%= c %></span><% }) %></div>
+      <button class="btn btn-secondary btn-sm" type="button" data-copy="<%= codes.join('\n') %>">Kopiuj</button>
+    <% } else { %>
+      <form method="post" action="<%= A %>/konto/kody" data-confirm="Wygenerować nowe kody? Stare przestaną działać."><input type="hidden" name="_csrf" value="<%= csrf %>"><button class="btn btn-secondary" type="submit">Wygeneruj nowe kody</button></form>
+    <% } %>
+  </section>
+</div>
+<%- include('_foot') %>

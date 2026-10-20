@@ -1,0 +1,3 @@
+<% const map = { awaiting_payment: ['Oczekuje', 'warn'], underpaid: ['Niedopłacone', 'bad'], paid: ['Opłacone', 'info'], awaiting_stock: ['Czeka na towar', 'warn'], fulfilled: ['Zrealizowane', 'ok'], expired: ['Wygasłe', 'muted'], cancelled: ['Anulowane', 'muted'], refunded: ['Zwrócone', 'muted'],
+  pending: ['Oczekuje', 'warn'], confirming: ['Potwierdzanie', 'info'], failed: ['Nieudana', 'bad'], sent: ['Wysłany', 'ok'], queued: ['W kolejce', 'warn'], delivered: ['Dostarczono', 'ok'], manual_pending: ['Ręczna realizacja', 'warn'], open: ['Otwarte', 'warn'], accepted: ['Przyjęte', 'ok'], rejected: ['Odrzucone', 'muted'] };
+const [l, c] = map[s] || [s, 'muted']; %><span class="pill <%= c %>"><%= l %></span>
